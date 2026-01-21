@@ -1,31 +1,30 @@
-CXX:=g++
-CXXFLAGS:= -ldl -lglfw -std=c++20
-INCS:=  -Iglad/include -Iinclude
-GLAD:= glad/src/glad.c
-SRCS_DIR:= src
-FILES:= main.cpp
-OBJ_DIR:= obj
-OBJ:= $(patsubst $(SRCS_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(SRCS))
+CXX:= g++
 NAME:= scop
+CXXFLAGS:= -std=c++20 -ldl -lglfw 
+INCLUDES:= -Iinc -I glad/include
+SRC_DIR:= src
+SRCS:= main.cpp 
+OBJ_DIR:= obj
+OBJS = $(SRCS:%.cpp=$(OBJ_DIR)/%.o)
+GLAD:= glad/src/glad.c
 
+all: $(NAME)
 
-all: $(NAME) 
+$(NAME): $(OBJ_DIR) $(OBJS)
+	$(CXX)  $(OBJS) $(GLAD) $(CXXFLAGS) $(INCLUDES) -o $(NAME)
 
-$(NAME): $(OBJ)
-	$(CXX) $(OBJ) $(GLAD)  $(CXXFLAGS) $(INCS) -o $@
-
-%.o: %.cpp
-	$(CXX) $(CXXFLAGS) $(INCS) -c $< -o $@ 
+$(SRC_DIR)/%.o: $(SRC_DIR)/%.cpp
+	$(CXX) $(CXXFLAGS) -I$(INCLUDES) -c $< -o $@
 
 $(OBJ_DIR):
 	mkdir -p $(OBJ_DIR)
 
 clean:
-	rm -f $(OBJ)
+	@rm -f $(OBJS) && echo "Cleaned *.o files"
 
 fclean: clean
-	rm -f $(NAME)
+	@rm -f $(NAME) && echo "Cleaned $(NAME)"
 
 re: fclean all
 
-.PHONY: all clean fclean re CXX CXXFLAGS INCS GLAD FILES OBJ OBJ_DIR NAME
+.PHONY: all clean fclean re CXX NAME CXXFLAGS INCLUDES SRC_DIR SRCS OBJ_DIR OBJS GLAD 
