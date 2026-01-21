@@ -1,11 +1,11 @@
 CXX:= g++
 NAME:= scop
 CXXFLAGS:= -std=c++20 -ldl -lglfw 
-INCLUDES:= -Iinc -I glad/include
+INCLUDES:= -I. -I inc -I glad/include
 SRC_DIR:= src
 SRCS:= main.cpp 
 OBJ_DIR:= obj
-OBJS = $(SRCS:%.cpp=$(OBJ_DIR)/%.o)
+OBJS = $(SRCS:%.cpp=$(SRC_DIR)/%.o)
 GLAD:= glad/src/glad.c
 
 all: $(NAME)
@@ -26,5 +26,8 @@ fclean: clean
 	@rm -f $(NAME) && echo "Cleaned $(NAME)"
 
 re: fclean all
+
+test: all
+	./$(NAME)
 
 .PHONY: all clean fclean re CXX NAME CXXFLAGS INCLUDES SRC_DIR SRCS OBJ_DIR OBJS GLAD 
