@@ -41,3 +41,5 @@
 *.dwo
 
 scop
+src/*.o
+obj

@@ -1,9 +1,9 @@
 CXX:= g++
 NAME:= scop
-CXXFLAGS:= -std=c++20 -ldl -lglfw 
+CXXFLAGS:= -std=c++20 -ldl -lglfw -lGL
 INCLUDES:= -I. -I inc -I glad/include
 SRC_DIR:= src
-SRCS:= main.cpp 
+SRCS:= main.cpp Window.cpp Shader.cpp Mesh.cpp
 OBJ_DIR:= obj
 OBJS = $(SRCS:%.cpp=$(SRC_DIR)/%.o)
 GLAD:= glad/src/glad.c
@@ -27,7 +27,7 @@ fclean: clean
 
 re: fclean all
 
-test: all
+test: re
 	./$(NAME)
 
 .PHONY: all clean fclean re CXX NAME CXXFLAGS INCLUDES SRC_DIR SRCS OBJ_DIR OBJS GLAD 
