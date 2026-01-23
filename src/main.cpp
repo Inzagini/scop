@@ -103,9 +103,10 @@ int main(int arc, char *argv[])
 
     //veritces
     float vertices[] = {
-         -0.5f, -0.5f, 0.0f,
-          0.5f, -0.5f, 0.0f,
-          0.0f,  0.5f, 0.0f
+          0.0f,  0.0f, 0.0f,
+          0.5f,  0.5f, 0.0f,
+          0.5f,  0.0f, 0.0f,
+          0.0f,  0.5f, 0.0f,
     };  
 
 
@@ -117,7 +118,7 @@ int main(int arc, char *argv[])
     // glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
     
-    glGenBuffers(1, &VAO);
+    glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VAO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
