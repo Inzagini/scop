@@ -8,7 +8,7 @@ class Mesh
 {
 
     public:
-        Mesh(const std::vector<float> &vertices,const unsigned int drawType,const std::vector<unsigned int> &indices = {});
+        Mesh(const std::vector<float> &vertices, const unsigned int &size, const unsigned int drawType,const std::vector<unsigned int> &indices = {});
         ~Mesh();
         void draw();
 
