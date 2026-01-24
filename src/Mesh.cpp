@@ -27,7 +27,7 @@ Mesh::Mesh(const std::vector<float> &vertices, const unsigned int &size, const u
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, size * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0);
 
-    //color attrubibute
+    //color attribute
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, size * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
@@ -51,4 +51,22 @@ void Mesh::draw()
         glDrawArrays(GL_TRIANGLES, 0, vertexCount);
 
     glBindVertexArray(0);
+}
+
+void Mesh::processInput(GLFWwindow *window)
+{
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, true);
+
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+        rotationX += rotationSpeed * deltaTime;
+
+    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+        rotationX -= rotationSpeed * deltaTime;
+
+    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+        rotationY += rotationSpeed * deltaTime;
+
+    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+        rotationY -= rotationSpeed * deltaTime;
 }
