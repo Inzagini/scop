@@ -52,21 +52,3 @@ void Mesh::draw()
 
     glBindVertexArray(0);
 }
-
-void Mesh::processInput(GLFWwindow *window)
-{
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
-
-    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-        rotationX += rotationSpeed * deltaTime;
-
-    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-        rotationX -= rotationSpeed * deltaTime;
-
-    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
-        rotationY += rotationSpeed * deltaTime;
-
-    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-        rotationY -= rotationSpeed * deltaTime;
-}
