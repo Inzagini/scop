@@ -22,7 +22,7 @@ class Camera
         const glm::vec3     positon {0.0f, 0.0f, 3.0f};
         const glm::vec3     prespective {1.0f};
         const float         fov{45.0f};
-        const float         aspectRatio = (float)SCR_WIDTH / (float)SCR_HEIGHT;
+        const float         aspectRatio = static_cast<float>(SCR_WIDTH) / SCR_HEIGHT;
         const float         nearPlane{0.1f};
         const float         farPlane{100.0f};
 };

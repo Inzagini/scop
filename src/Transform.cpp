@@ -6,7 +6,6 @@ glm::mat4 Transform::getModel() const
     glm::vec3 rotateX{1.0f, 0.0f, 0.0f};
     glm::vec3 rotateY{0.0f, 1.0f, 0.0f};
     glm::vec3 rotateZ{0.0f, 0.0f, 1.0f};
-    glm::vec3 scale {1.0f};
 
     // model = glm::translate(model, glm::vec3{0.0f});
     model = glm::rotate(model, rotation.x, rotateX);
@@ -85,4 +84,14 @@ float Transform::getRotationY()
 float Transform::getRotationZ()
 {
     return rotation.z;
+}
+
+void Transform::setScale(glm::vec3 newScale)
+{
+    scale = newScale;
+}
+
+glm::vec3 Transform::getScale()
+{
+    return scale;
 }

@@ -21,6 +21,7 @@ float lastFrame = 0.0f;
 void processInput(GLFWwindow *window, GameObject *object)
 {
     float rotationSpeed = 1.5f;
+    float scaleSpeed = 1.0f * deltaTime;
 
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
             glfwSetWindowShouldClose(window, true);
@@ -37,12 +38,24 @@ void processInput(GLFWwindow *window, GameObject *object)
     if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
         object->transform.setRotationY(object->transform.getRotationY() + (rotationSpeed * deltaTime));
     
+
+    if (glfwGetKey(window, GLFW_KEY_EQUAL) == GLFW_PRESS &&
+        glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+        object->transform.setScale(object->transform.getScale() + scaleSpeed);
+    
+    if (glfwGetKey(window, GLFW_KEY_MINUS) == GLFW_PRESS &&
+        glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+        object->transform.setScale(object->transform.getScale() - scaleSpeed);
 }
 
 int main(int arc, char *argv[])
 {
     Window window;
     Shader shader("shaders/vertex.glsl", "shaders/fragment.glsl");
+
+    int fbWidth, fbHeight;
+    glfwGetFramebufferSize(window.get(), &fbWidth, &fbHeight);
+    glViewport(0, 0, fbWidth, fbHeight);
 
     //veritces
     std::vector<float> vertices = {
@@ -89,7 +102,52 @@ int main(int arc, char *argv[])
         -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
     };
 
-    
+    std::vector<float> a42 = {
+         0.232406f, -1.216630f, 1.133818f,
+         0.232406f, -0.745504f, 2.843098f,
+        -0.227475f, -0.745504f, 2.843098f,
+        -0.227475f, -1.216630f, 1.133818f,
+         0.232407f ,  1.119982f, 1.133819f,
+         0.232406f ,  1.119982f, 1.602814f,
+        -0.227475f,  1.119982f, 1.602813f,
+        -0.227475f,  1.119982f, 1.133818f,
+         0.232406f , -0.340316f, 2.843098f,
+        -0.227475f, -0.340316f, 2.843098f,
+         0.232407f , -0.305193f, 1.133819f,
+         0.232407f , -0.294496f, 2.297937f,
+        -0.227475f, -0.305193f, 1.133818f,
+        -0.227475f, -0.294496f, 2.297937f,
+         0.232406f , -1.222569f, 1.497195f,
+         0.232406f , -0.745504f, 1.477731f,
+        -0.227475f, -0.745504f, 1.477731f,
+        -0.227475f, -1.222569f, 1.497194f,
+        -0.227403f, -0.731178f, 0.901477f,
+        -0.227403f, -0.731178f, -0.037620f,
+         0.223704f , -0.731178f, -0.037620f,
+         0.223704f , -0.731178f, 0.901477f,
+        -0.227403f,  1.119377f, 0.901477f,
+        -0.227403f,  1.119377f, -0.037620f,
+         0.223704f ,  1.119377f, -0.037620f,
+         0.223704f ,  1.119377f, 0.901477f,
+        -0.227403f, -0.129772f, 0.901477f,
+        -0.227403f,  0.551492f, 0.384487f,
+        -0.227403f,  1.104268f, 0.408501f,
+        -0.227403f,  0.507336f, 0.901477f,
+         0.223704f ,  0.507336f, 0.901477f,
+         0.223704f ,  1.104269f, 0.408501f,
+         0.223704f ,  0.551492f, 0.384487f,
+         0.223704f , -0.129772f, 0.901477f,
+        -0.227403f,  0.634134f, -0.037620f,
+        -0.227403f, -0.066768f, 0.398575f,
+        -0.227403f, -0.684649f, 0.389681f,
+        -0.227403f, -0.075523f, -0.037620f,
+         0.223704f ,  0.634134f, -0.037620f,
+         0.223704f , -0.066768f, 0.398575f,
+         0.223704f , -0.684649f, 0.389681f,
+         0.223704f , -0.075523f, -0.037620f
+    };
+
+
     Mesh mesh1(vertices, 5, GL_STATIC_DRAW);
 
     GameObject cube(mesh1);
@@ -111,20 +169,6 @@ int main(int arc, char *argv[])
         
 
         {
-            // glm::mat4 model         = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
-            // glm::mat4 view          = glm::mat4(1.0f);
-            // glm::mat4 projection    = glm::mat4(1.0f);
-
-            // view  = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-            // projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        
-            // retrieve the matrix uniform locations
-            // unsigned int viewLoc  = glGetUniformLocation(shader.getID(), "view");
-            
-            // pass them to the shaders (3 different ways)
-            // glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(cube.transform.getModel()));
-            // glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &view[0][0]);
-            
             // note: currently we set the projection matrix each frame, but since the projection matrix rarely changes it's often best practice to set it outside the main loop only once.
             shader.setMat4("model", cube.transform.getModel());
             shader.setMat4("view", camera.getView());

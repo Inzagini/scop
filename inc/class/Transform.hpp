@@ -9,8 +9,8 @@
 class Transform {
 
     public:
-        glm::mat4 getModel() const;
-        glm::mat4 translateView() const;
+        glm::mat4   getModel() const;
+        glm::mat4   translateView() const;
 
         void        setPositionX(float n);
         void        setPositionY(float n);
@@ -26,6 +26,8 @@ class Transform {
         float       getRotationY();
         float       getRotationZ();
 
+        void        setScale(glm::vec3 n);
+        glm::vec3   getScale();
 
     private:
         glm::vec3 position {0.0f};
