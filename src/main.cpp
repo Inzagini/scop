@@ -3,6 +3,7 @@
 #include "class/Shader.hpp"
 #include "class/Mesh.hpp"
 #include "class/GameObject.hpp"
+#include "class/Camera.hpp"
 
 #include <vector>
 #include <cmath>
@@ -92,6 +93,7 @@ int main(int arc, char *argv[])
     Mesh mesh1(vertices, 5, GL_STATIC_DRAW);
 
     GameObject cube(mesh1);
+    Camera      camera;
 
     while (!glfwWindowShouldClose(window.get()))
     {
@@ -110,27 +112,26 @@ int main(int arc, char *argv[])
 
         {
             // glm::mat4 model         = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
-            glm::mat4 view          = glm::mat4(1.0f);
-            glm::mat4 projection    = glm::mat4(1.0f);
+            // glm::mat4 view          = glm::mat4(1.0f);
+            // glm::mat4 projection    = glm::mat4(1.0f);
 
-            // model = glm::rotate(model, cube.transform.getRotationX(), glm::vec3(1.0f, 0.0f, 0.0f));
-            // model = glm::rotate(model, cube.transform.getRotationY(), glm::vec3(0.0f, 1.0f, 0.0f));
-            view  = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-            projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+            // view  = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+            // projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         
             // retrieve the matrix uniform locations
-            unsigned int modelLoc = glGetUniformLocation(shader.getID(), "model");
-            unsigned int viewLoc  = glGetUniformLocation(shader.getID(), "view");
+            // unsigned int viewLoc  = glGetUniformLocation(shader.getID(), "view");
             
             // pass them to the shaders (3 different ways)
-            glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(cube.transform.getModel()));
-            glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &view[0][0]);
+            // glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(cube.transform.getModel()));
+            // glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &view[0][0]);
             
             // note: currently we set the projection matrix each frame, but since the projection matrix rarely changes it's often best practice to set it outside the main loop only once.
-            shader.setMat4("projection", projection);
+            shader.setMat4("model", cube.transform.getModel());
+            shader.setMat4("view", camera.getView());
+            shader.setMat4("projection", camera.getProjection());
+            
         }
-        mesh1.draw();
-        // cube.draw(shader);
+        cube.draw(shader);
        
         glfwSwapBuffers(window.get());
         glfwPollEvents();
