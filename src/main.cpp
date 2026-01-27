@@ -1,22 +1,4 @@
 #include "scop.hpp"
-#include "class/Window.hpp"
-#include "class/Shader.hpp"
-#include "class/Mesh.hpp"
-#include "class/GameObject.hpp"
-#include "class/Camera.hpp"
-
-#include <vector>
-#include <cmath>
-
-
-#include "glm/glm.hpp"
-#include "glm/gtc/matrix_transform.hpp"
-#include "glm/gtc/type_ptr.hpp"
-
-
-// float rotationSpeed = 1.5f;
-float deltaTime = 0.0f;
-float lastFrame = 0.0f;
 
 void processInput(GLFWwindow *window, GameObject *object)
 {
@@ -41,11 +23,11 @@ void processInput(GLFWwindow *window, GameObject *object)
 
     if (glfwGetKey(window, GLFW_KEY_EQUAL) == GLFW_PRESS &&
         glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
-        object->transform.setScale(object->transform.getScale() + scaleSpeed);
+        object->transform.setScale(scaleSpeed);
     
     if (glfwGetKey(window, GLFW_KEY_MINUS) == GLFW_PRESS &&
         glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
-        object->transform.setScale(object->transform.getScale() - scaleSpeed);
+        object->transform.setScale(-scaleSpeed);
 }
 
 int main(int arc, char *argv[])
@@ -57,100 +39,12 @@ int main(int arc, char *argv[])
     glfwGetFramebufferSize(window.get(), &fbWidth, &fbHeight);
     glViewport(0, 0, fbWidth, fbHeight);
 
-    //veritces
-    std::vector<float> vertices = {
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-         0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+    Objprop objProp;
+    if (!parseObj("resources/teapot2.obj", objProp))
+        std::exit(-1);
 
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-
-        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-
-         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
-    };
-
-    std::vector<float> a42 = {
-         0.232406f, -1.216630f, 1.133818f,
-         0.232406f, -0.745504f, 2.843098f,
-        -0.227475f, -0.745504f, 2.843098f,
-        -0.227475f, -1.216630f, 1.133818f,
-         0.232407f ,  1.119982f, 1.133819f,
-         0.232406f ,  1.119982f, 1.602814f,
-        -0.227475f,  1.119982f, 1.602813f,
-        -0.227475f,  1.119982f, 1.133818f,
-         0.232406f , -0.340316f, 2.843098f,
-        -0.227475f, -0.340316f, 2.843098f,
-         0.232407f , -0.305193f, 1.133819f,
-         0.232407f , -0.294496f, 2.297937f,
-        -0.227475f, -0.305193f, 1.133818f,
-        -0.227475f, -0.294496f, 2.297937f,
-         0.232406f , -1.222569f, 1.497195f,
-         0.232406f , -0.745504f, 1.477731f,
-        -0.227475f, -0.745504f, 1.477731f,
-        -0.227475f, -1.222569f, 1.497194f,
-        -0.227403f, -0.731178f, 0.901477f,
-        -0.227403f, -0.731178f, -0.037620f,
-         0.223704f , -0.731178f, -0.037620f,
-         0.223704f , -0.731178f, 0.901477f,
-        -0.227403f,  1.119377f, 0.901477f,
-        -0.227403f,  1.119377f, -0.037620f,
-         0.223704f ,  1.119377f, -0.037620f,
-         0.223704f ,  1.119377f, 0.901477f,
-        -0.227403f, -0.129772f, 0.901477f,
-        -0.227403f,  0.551492f, 0.384487f,
-        -0.227403f,  1.104268f, 0.408501f,
-        -0.227403f,  0.507336f, 0.901477f,
-         0.223704f ,  0.507336f, 0.901477f,
-         0.223704f ,  1.104269f, 0.408501f,
-         0.223704f ,  0.551492f, 0.384487f,
-         0.223704f , -0.129772f, 0.901477f,
-        -0.227403f,  0.634134f, -0.037620f,
-        -0.227403f, -0.066768f, 0.398575f,
-        -0.227403f, -0.684649f, 0.389681f,
-        -0.227403f, -0.075523f, -0.037620f,
-         0.223704f ,  0.634134f, -0.037620f,
-         0.223704f , -0.066768f, 0.398575f,
-         0.223704f , -0.684649f, 0.389681f,
-         0.223704f , -0.075523f, -0.037620f
-    };
-
-
-    Mesh mesh1(vertices, 5, GL_STATIC_DRAW);
-
-    GameObject cube(mesh1);
+    Mesh mesh1(objProp, 3, GL_STATIC_DRAW);
+    GameObject gameObj(mesh1);
     Camera      camera;
 
     while (!glfwWindowShouldClose(window.get()))
@@ -160,7 +54,7 @@ int main(int arc, char *argv[])
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
-        processInput(window.get(), &cube);
+        processInput(window.get(), &gameObj);
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -170,12 +64,29 @@ int main(int arc, char *argv[])
 
         {
             // note: currently we set the projection matrix each frame, but since the projection matrix rarely changes it's often best practice to set it outside the main loop only once.
-            shader.setMat4("model", cube.transform.getModel());
+            shader.setMat4("model", gameObj.transform.getModel());
             shader.setMat4("view", camera.getView());
             shader.setMat4("projection", camera.getProjection());
-            
+
+            glm::vec3 ambient{1.000000, 1.000000, 1.000000};   // Ka
+            glm::vec3 diffuse {0.8, 0.8, 0.8};   // Kd
+            glm::vec3 specular {0.8, 0.8, 0.8};  // Ks
+            float shininess{0.0};     // Ns
+            float opacity{1.0};       // d
+
+
+            shader.setVec3("lightDir", glm::normalize(glm::vec3(-1.0f, -1.0f, -1.0f)));
+            shader.setVec3("lightColor", glm::vec3(1.0f));
+
+            shader.setVec3("viewPos", camera.getPos());
+            shader.setVec3("material.ambient", objProp.material.ambient);
+            shader.setVec3("material.diffuse", objProp.material.diffuse);
+            shader.setVec3("material.specular", objProp.material.specular);
+            shader.setFloat("material.opacity", objProp.material.opacity);
+            shader.setFloat("material.shininess", objProp.material.shininess);
+
         }
-        cube.draw(shader);
+        gameObj.draw(shader);
        
         glfwSwapBuffers(window.get());
         glfwPollEvents();

@@ -15,7 +15,12 @@ class Camera
 
         glm::mat4   getProjection(void) const
         {
-            return glm::perspective(fov, aspectRatio, nearPlane, farPlane);
+            return glm::perspective(glm::radians(fov), aspectRatio, nearPlane, farPlane);
+        }
+
+        glm::vec3 getPos(void) const
+        {
+            return positon;
         }
 
     private:

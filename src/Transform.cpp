@@ -86,9 +86,9 @@ float Transform::getRotationZ()
     return rotation.z;
 }
 
-void Transform::setScale(glm::vec3 newScale)
+void Transform::setScale(float scaleSpeed)
 {
-    scale = newScale;
+    scale = scale + scaleSpeed;
 }
 
 glm::vec3 Transform::getScale()

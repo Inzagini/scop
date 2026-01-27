@@ -21,7 +21,8 @@ class Shader {
         void setVec4(const std::string &name, float x, float y, float z, float w) const;
         void setMat3(const std::string &name, const glm::mat3 &mat) const;
         void setMat4(const std::string &name, const glm::mat4 &mat) const;
-
+        void setVec3(const std::string &name, const glm::vec3 &value) const;
+        void setFloat(const std::string &name, const float n) const;
 
     private:
         void ErrorMessage(unsigned int shader, unsigned int type);

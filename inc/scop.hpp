@@ -3,8 +3,21 @@
 # include "glad/glad.h"
 # include <GLFW/glfw3.h>
 # include <iostream>
+#include <vector>
+#include <cmath>
+
+#include "class/Window.hpp"
+#include "class/Shader.hpp"
+#include "class/Mesh.hpp"
+#include "class/GameObject.hpp"
+#include "class/Camera.hpp"
+
+float deltaTime = 0.0f;
+float lastFrame = 0.0f;
+
 
 void processInput(GLFWwindow *window);
+bool parseObj(const char *, Objprop &obj);
 
 class Window;
 

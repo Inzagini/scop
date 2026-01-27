@@ -5,11 +5,29 @@
 #include <vector>
 #include "glm/glm.hpp"
 
+struct Material
+{
+   float opacity;
+   float shininess;
+   glm::vec3 ambient;
+   glm::vec3 diffuse;
+   glm::vec3 specular;
+};
+
+struct Objprop
+{
+    int size;
+    Material material;
+    std::vector<float> vertices;
+    std::vector<unsigned int> indices;
+};
+
+
 class Mesh
 {
 
     public:
-        Mesh(const std::vector<float> &vertices, const unsigned int &size, const unsigned int drawType,const std::vector<unsigned int> &indices = {});
+        Mesh(const Objprop &obj, const unsigned int &size, const unsigned int drawType);
         ~Mesh();
         void draw();
 

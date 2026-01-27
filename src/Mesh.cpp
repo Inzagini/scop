@@ -2,24 +2,23 @@
 
 #include <iostream>
 
-Mesh::Mesh(const std::vector<float> &vertices, const unsigned int &size, const unsigned int drawType, const std::vector<unsigned int> &indices)
+Mesh::Mesh(const Objprop &obj, const unsigned int &size, const unsigned int drawType)
 {
-    indexCount = indices.size();
-    vertexCount = vertices.size() / 3;
-    std::cout << "Vertex count: " << vertexCount << " Index count: " << indexCount << '\n';
+    indexCount = obj.indices.size();
+    vertexCount = obj.vertices.size() / 3;
 
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
-    if (!indices.empty()) glGenBuffers(1, &EBO);
 
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW); 
+    glBufferData(GL_ARRAY_BUFFER, obj.vertices.size() * sizeof(float), obj.vertices.data(), GL_STATIC_DRAW); 
 
-    if (!indices.empty())
+    if (!obj.indices.empty())
     {
+        glGenBuffers(1, &EBO);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), drawType);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, obj.indices.size() * sizeof(unsigned int), obj.indices.data(), drawType);
     }
 
 
@@ -28,8 +27,13 @@ Mesh::Mesh(const std::vector<float> &vertices, const unsigned int &size, const u
     glEnableVertexAttribArray(0);
 
     //color attribute
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, size * sizeof(float), reinterpret_cast<void *>(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
+    // if (size == 5)
+    // {
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, size * sizeof(float), reinterpret_cast<void *>(3 * sizeof(float)));
+        glEnableVertexAttribArray(1);
+    // }
+
+
 
     // glBindVertexArray(0);
 
