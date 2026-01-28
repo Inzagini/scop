@@ -11,6 +11,7 @@
 #include "class/Mesh.hpp"
 #include "class/GameObject.hpp"
 #include "class/Camera.hpp"
+#include "class/ObjectControl.hpp"
 
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;

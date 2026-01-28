@@ -6,7 +6,7 @@ void processInput(GLFWwindow *window, GameObject *object)
     float scaleSpeed = 1.0f * deltaTime;
 
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-            glfwSetWindowShouldClose(window, true);
+            glfwSetWindowShouldClose(window, true);    
 
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
         object->transform.setRotationX(object->transform.getRotationX() - (rotationSpeed * deltaTime));
@@ -28,6 +28,7 @@ void processInput(GLFWwindow *window, GameObject *object)
     if (glfwGetKey(window, GLFW_KEY_MINUS) == GLFW_PRESS &&
         glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
         object->transform.setScale(-scaleSpeed);
+    
 }
 
 int main(int arc, char *argv[])
@@ -46,6 +47,10 @@ int main(int arc, char *argv[])
     Mesh mesh1(objProp, 3, GL_STATIC_DRAW);
     GameObject gameObj(mesh1);
     Camera      camera;
+    ObjectControl &objectControler = ObjectControl::getInstance();
+    objectControler.init(window.get(), &gameObj);
+
+    glfwSetWindowUserPointer(window.get(), &objectControler);
 
     while (!glfwWindowShouldClose(window.get()))
     {
@@ -55,6 +60,8 @@ int main(int arc, char *argv[])
         lastFrame = currentFrame;
 
         processInput(window.get(), &gameObj);
+        
+        objectControler.mouseHandler();
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
