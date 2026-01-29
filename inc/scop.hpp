@@ -11,13 +11,12 @@
 #include "class/Mesh.hpp"
 #include "class/GameObject.hpp"
 #include "class/Camera.hpp"
-#include "class/ObjectControl.hpp"
+#include "class/CameraControl.hpp"
 
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
 
-void processInput(GLFWwindow *window);
 bool parseObj(const char *, Objprop &obj);
 
 class Window;

@@ -3,7 +3,7 @@ NAME:= scop
 CXXFLAGS:= -std=c++20 -ldl -lglfw -lGL
 INCLUDES:= -I. -I inc -I glad/include
 SRC_DIR:= src
-SRCS:= main.cpp Window.cpp Shader.cpp Mesh.cpp Transform.cpp GameObject.cpp Camera.cpp parse.cpp ObjectControl.cpp
+SRCS:= main.cpp Window.cpp Shader.cpp Mesh.cpp Transform.cpp GameObject.cpp CameraControl.cpp parse.cpp 
 OBJ_DIR:= obj
 OBJS = $(SRCS:%.cpp=$(SRC_DIR)/%.o)
 GLAD:= glad/src/glad.c

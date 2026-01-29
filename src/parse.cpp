@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <sstream>
+#include <filesystem>
 
 #include "glm/glm.hpp"
 #include "glm/gtc/type_ptr.hpp"
@@ -77,6 +78,8 @@ bool parseObj(const char *filePath, Objprop &obj)
     std::vector<float> verticies;
     verticies.reserve(1000);
     
+    std::filesystem::path path(filePath);
+
     std::ifstream file(filePath);
     if (!file)
     {
@@ -123,7 +126,8 @@ bool parseObj(const char *filePath, Objprop &obj)
             std::string fileName;
             ss >> fileName;
 
-            obj.material = parseMaterial(fileName);
+            std::string dirPath = path.parent_path();
+            obj.material = parseMaterial(dirPath + "/" + fileName);
         }
     }
     return true;
