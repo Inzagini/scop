@@ -1,0 +1,22 @@
+# GLFW
+leak:glfw
+leak:libglfw
+
+# OpenGL loaders
+leak:glad
+leak:GLEW
+
+# OpenGL / system drivers
+leak:libGL
+leak:libEGL
+leak:libGLX
+leak:libOpenGL
+
+# X11 (Linux)
+leak:libX11
+leak:libxcb
+
+# library
+leak:libfontconfig
+leak:libdbus-1
+leak:libwayland-client

@@ -17,7 +17,7 @@ float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
 
-bool parseObj(const char *, Objprop &obj);
+bool parseObj(const char *, ObjProp &obj);
 
 class Window;
 

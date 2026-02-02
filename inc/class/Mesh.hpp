@@ -14,7 +14,7 @@ struct Material
    glm::vec3 specular;
 };
 
-struct Objprop
+struct ObjProp
 {
     int size;
     Material material;
@@ -27,7 +27,7 @@ class Mesh
 {
 
     public:
-        Mesh(const Objprop &obj, const unsigned int &size, const unsigned int drawType);
+        Mesh(const ObjProp &obj, const unsigned int &size, const unsigned int drawType);
         ~Mesh();
         void draw();
 

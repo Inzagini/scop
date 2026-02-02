@@ -36,6 +36,7 @@ unsigned int Shader::createAndCompileShader(unsigned int type, const char* sourc
     glShaderSource(shader, 1, &source, nullptr);
     glCompileShader(shader);
     ErrorMessage(shader, type);
+
     return shader;
 }
 
@@ -84,6 +85,29 @@ std::string Shader::loadShader(const std::string &name)
     ss << file.rdbuf();
     file.close();
     return ss.str();
+}
+
+void Shader::setMaterialProp(ObjProp &objProp)
+{
+    setVec3("material.ambient", objProp.material.ambient);
+    setVec3("material.diffuse", objProp.material.diffuse);
+    setVec3("material.specular", objProp.material.specular);
+    setFloat("material.opacity", objProp.material.opacity);
+    setFloat("material.shininess", objProp.material.shininess);
+}
+
+void Shader::setCamera(Camera &camera)
+{
+    setMat4("view", camera.getView());
+    setMat4("projection", camera.getProjection());
+    setVec3("viewPos", camera.getPosition());
+}
+
+void Shader::setLight()
+{
+    setVec3("lightDir", glm::normalize(glm::vec3(1.0f, 1.0f, 1.0f)));
+    setVec3("lightPos", glm::vec3(1.0f, 1.0f, 1.0f));
+    setVec3("lightColor", glm::vec3(1.0f)); //white light
 }
 
 void Shader::setVec4(const std::string &name, const glm::vec4 &value) const

@@ -7,8 +7,13 @@
 class GameObject
 {
     public:
-        Mesh        *mesh;
-        Transform   transform;
         GameObject(Mesh &mesh) : mesh(&mesh) {}
         void    draw(Shader &shader);
+        Mesh    *getMesh();
+        Transform getTransform();
+        void movementHandler(float &dTime);
+
+    private:
+        Mesh        *mesh;
+        Transform   transform;
 };

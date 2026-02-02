@@ -11,6 +11,36 @@
 
 #include "class/Mesh.hpp"
 
+template<typename T, typename U>
+void pushToVector(T x, T y, T z, T offset,std::vector<U> &vec)
+{
+    vec.push_back(x - offset);
+    vec.push_back(y - offset);
+    vec.push_back(z - offset);
+}
+
+static bool validLine(const std::string &line, const size_t expectedSize, bool indicies = false)
+{
+    std::stringstream ss(line);
+    std::string valid;
+    std::vector<std::string> vec;
+    vec.reserve(expectedSize);
+
+    while (ss >> valid)
+    {
+        vec.push_back(valid);
+    }
+
+    if (vec.size() == expectedSize)
+        return true;
+
+    
+    if (!indicies && vec.size() == 4)
+        std::cerr << "Invalid line: " << line << '\n';     
+
+    return false;
+}
+
 
 static Material parseMaterial(const std::string &fileName)
 {
@@ -32,52 +62,74 @@ static Material parseMaterial(const std::string &fileName)
     std::cout << "OPENED: " << fileName << '\n';
 
     std::string line;
-    while (!std::getline(file, line))
+    int mtlCount{};
+
+    while (std::getline(file, line))
     {
         if (line.empty() || line[0] == '#') continue;
 
-        std::stringstream ss(line);
         
+        std::stringstream ss(line);
         std::string prefix;
         ss >> prefix;
 
         float r{}, g{}, b{}; //r is reused for float
+        
 
         if (prefix == "Ns")
         {
+            if(!validLine(line, 2))
+                break;
+            
             ss >> r;
             mat.shininess = r;
         }
         else if (prefix == "Ka")
         {
+            if(!validLine(line, 4))
+                break;
             ss >> r >> g >> b;
             mat.ambient = glm::vec3(r, g, b);
         }
         else if (prefix == "Kd")
         {
+            if(!validLine(line, 4))
+                break;
             ss >> r >> g >> b;
             mat.diffuse = glm::vec3(r, g, b);
         }
         else if (prefix == "Ks")
         {
+            if(!validLine(line, 4))
+                break;
             ss >> r >> g >> b;
             mat.specular = glm::vec3(r, g, b);
         }
         else if (prefix == "d")
         {
+            if(!validLine(line, 2))
+                break;
             ss >> r;
             mat.opacity = r;
         }
+        else if (prefix == "newmlt")
+        {
+            mtlCount += 1;
+        }
+        else
+        {
+            std::cerr << "CANNOT RECOGNIZE: " << prefix << '\n';
+        }
     }
     
+    if (mtlCount > 1)
+        std::cerr << "ONLY 1 MATERIAL IS SUPPORTED\n";
+
     return mat;
 }
 
-bool parseObj(const char *filePath, Objprop &obj)
-{
-    std::vector<float> verticies;
-    verticies.reserve(1000);
-    
+bool parseObj(const char *filePath, ObjProp &obj)
+{ 
     std::filesystem::path path(filePath);
 
     std::ifstream file(filePath);
@@ -101,28 +153,33 @@ bool parseObj(const char *filePath, Objprop &obj)
 
         if (prefix == "v")
         {
+            if(!validLine(line, 4, true))
+                return false;
             float x{}, y{}, z{};
 
             ss >> x >> y >> z;
-            obj.vertices.push_back(x);
-            obj.vertices.push_back(y);
-            obj.vertices.push_back(z);
+            pushToVector(x, y, z, 0.0f, obj.vertices);
         }
         else if (prefix == "f")
         {
-            std::string vertexStr;
-            // vertexStr could be "16" or "16/1/1"
-            while (ss >> vertexStr)
+            unsigned int w{}, x{}, y{}, z{};
+
+            if(validLine(line, 4, true))
             {
-                std::stringstream vs(vertexStr);
-                unsigned int vertexIndex;
-                
-                vs >> vertexIndex;
-                obj.indices.push_back(vertexIndex - 1);
+                ss >> x >> y >> z;
+                pushToVector(x, y, z, 1u, obj.indices);
+            }
+            else if(validLine(line, 5, true))
+            {
+                ss >> x >> y >> z >> w;
+                pushToVector(x, y, z, 1u, obj.indices);
+                pushToVector(x, y, w, 1u, obj.indices);
             }
         }
         else if (prefix == "mtllib")
         {
+            if(!validLine(line, 2))
+                break;
             std::string fileName;
             ss >> fileName;
 
@@ -132,3 +189,4 @@ bool parseObj(const char *filePath, Objprop &obj)
     }
     return true;
 }
+

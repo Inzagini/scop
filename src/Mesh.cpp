@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-Mesh::Mesh(const Objprop &obj, const unsigned int &size, const unsigned int drawType)
+Mesh::Mesh(const ObjProp &obj, const unsigned int &size, const unsigned int drawType)
 {
     indexCount = obj.indices.size();
     vertexCount = obj.vertices.size() / 3;

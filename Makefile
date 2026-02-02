@@ -1,6 +1,6 @@
 CXX:= g++
 NAME:= scop
-CXXFLAGS:= -std=c++20 -ldl -lglfw -lGL
+CXXFLAGS:= -std=c++20 -ldl -lglfw -lGL -g -fsanitize=address
 INCLUDES:= -I. -I inc -I glad/include
 SRC_DIR:= src
 SRCS:= main.cpp Window.cpp Shader.cpp Mesh.cpp Transform.cpp GameObject.cpp CameraControl.cpp parse.cpp 
@@ -27,7 +27,7 @@ fclean: clean
 
 re: fclean all
 
-test: re
-	./$(NAME)
+test: $(NAME)
+	LSAN_OPTIONS=suppressions=lsan.supp ./$(NAME)
 
 .PHONY: all clean fclean re CXX NAME CXXFLAGS INCLUDES SRC_DIR SRCS OBJ_DIR OBJS GLAD 

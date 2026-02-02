@@ -11,12 +11,18 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
+#include "class/Mesh.hpp"
+#include "class/Camera.hpp"
+
 class Shader {
 
     public:
         Shader(const std::string &vertexShaderSourcePath, const std::string &fragmentShaderSourcePath);
         void use(void);
         unsigned int getID();
+        void setMaterialProp(ObjProp &objprop);
+        void setCamera(Camera &camera);
+        void setLight();
         void setVec4(const std::string &name, const glm::vec4 &value) const;
         void setVec4(const std::string &name, float x, float y, float z, float w) const;
         void setMat3(const std::string &name, const glm::mat3 &mat) const;

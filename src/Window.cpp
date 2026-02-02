@@ -3,11 +3,6 @@
 
 Window::Window()
 {
-    if (!glfwInit())
-    {
-        std::cerr << "Failed to initialize GLFW\n";
-        std::exit(-1);
-    }
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -28,7 +23,6 @@ Window::~Window()
 {
     if (window)
         glfwDestroyWindow(window);
-    glfwTerminate();
 }
 
 GLFWwindow* Window::get() const
