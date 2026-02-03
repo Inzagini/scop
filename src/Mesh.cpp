@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-Mesh::Mesh(const ObjProp &obj, const unsigned int &size, const unsigned int drawType)
+Mesh::Mesh(const ObjProp &obj, const unsigned int &size, const unsigned int drawType) : opacity(obj.material.opacity)
 {
     indexCount = obj.indices.size();
     vertexCount = obj.vertices.size() / 3;
@@ -55,4 +55,9 @@ void Mesh::draw()
         glDrawArrays(GL_TRIANGLES, 0, vertexCount);
 
     glBindVertexArray(0);
+}
+
+const float Mesh::getOpacity() const
+{
+    return opacity;
 }

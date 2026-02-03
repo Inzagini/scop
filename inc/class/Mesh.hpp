@@ -30,8 +30,10 @@ class Mesh
         Mesh(const ObjProp &obj, const unsigned int &size, const unsigned int drawType);
         ~Mesh();
         void draw();
+        const float getOpacity() const;
 
     private:
+        const float     opacity{1};
         unsigned int    VBO{}, VAO{}, EBO{};
         size_t          indexCount{};
         size_t          vertexCount{};
