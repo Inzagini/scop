@@ -21,19 +21,13 @@ Mesh::Mesh(const ObjProp &obj, const unsigned int &size, const unsigned int draw
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, obj.indices.size() * sizeof(unsigned int), obj.indices.data(), drawType);
     }
 
-
     //position attribute
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, size * sizeof(float), reinterpret_cast<void *>(0));
     glEnableVertexAttribArray(0);
 
     //color attribute
-    // if (size == 5)
-    // {
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, size * sizeof(float), reinterpret_cast<void *>(3 * sizeof(float)));
-        glEnableVertexAttribArray(1);
-    // }
-
-
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, size * sizeof(float), reinterpret_cast<void *>(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
 
     // glBindVertexArray(0);
 
