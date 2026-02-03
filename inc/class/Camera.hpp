@@ -9,26 +9,19 @@
 class Camera
 {
     public:
+        glm::mat4   getView(void) const {return glm::lookAt(position, target, up);}
+        glm::mat4   getProjection(void) const {return glm::perspective(glm::radians(fov), aspectRatio, nearPlane, farPlane);}
+        glm::vec3   getPosition(void) const {return position;}
+        void        move(const glm::vec3 n) {position = n;}
 
-        glm::mat4 getView(void) const
-        {
-            return glm::lookAt(position, target, up);
-        }
+        float       getYaw() {return yaw;}
+        void        setYaw(float n) {yaw = n;}
 
-        glm::mat4   getProjection(void) const
-        {
-            return glm::perspective(glm::radians(fov), aspectRatio, nearPlane, farPlane);
-        }
+        float       getPitch() {return pitch;}
+        void        setPitch(float n) {pitch = n;}
 
-        glm::vec3 getPosition(void) const
-        {
-            return position;
-        }
-
-        void move(const glm::vec3 n)
-        {
-            position = n;
-        }
+        float       getRadius() {return radius;}
+        void        setRadius(float n) {radius = n;}
 
     private:
         glm::vec3           position {0.0f, 1.0f, 3.0f};
@@ -38,5 +31,8 @@ class Camera
         const float         aspectRatio = static_cast<float>(SCR_WIDTH) / SCR_HEIGHT;
         const float         nearPlane{0.1f};
         const float         farPlane{100.0f};
+        float               radius = glm::length(position - target); //distance camera from target
+        float               yaw = glm::degrees(atan2((position - target).z, (position - target).x));
+        float               pitch = glm::degrees(asin((position - target).y / radius));
 
 };

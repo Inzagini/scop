@@ -7,19 +7,19 @@
 
 struct Material
 {
-   float opacity;
-   float shininess;
-   glm::vec3 ambient;
-   glm::vec3 diffuse;
-   glm::vec3 specular;
+    glm::vec3 ambient;
+    glm::vec3 diffuse;
+    glm::vec3 specular;
+    float opacity;
+    float shininess;
 };
 
 struct ObjProp
 {
-    int size;
     Material material;
     std::vector<float> vertices;
     std::vector<unsigned int> indices;
+    int size;
 };
 
 
@@ -33,8 +33,8 @@ class Mesh
         const float getOpacity() const;
 
     private:
-        const float     opacity{1};
-        unsigned int    VBO{}, VAO{}, EBO{};
         size_t          indexCount{};
         size_t          vertexCount{};
+        const float     opacity{1};
+        unsigned int    VBO{}, VAO{}, EBO{};
 };

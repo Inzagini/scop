@@ -11,6 +11,11 @@ class Window
         Window();
         ~Window();
         GLFWwindow* get() const;
+        void control() const
+        {
+            if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+                glfwSetWindowShouldClose(window, true);
+        }
     
     private:
         static void framebuffer_size_callback(GLFWwindow *window, int width, int height)

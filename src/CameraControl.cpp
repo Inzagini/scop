@@ -22,3 +22,59 @@ void CameraControl::mouseHandler(float &dTime)
     glfwSetMouseButtonCallback(window, mouseButtonCallback);
     glfwSetCursorPosCallback(window, scrollDragCallback);
 }
+
+void CameraControl::onScroll(double dx, double dy)
+{
+    glm::vec3 offset = camera->getPosition() - target;
+    constexpr float zoomSpeed = 0.3f;
+    float distance = glm::length(offset);
+
+    float newDistance = distance - float(dy) * zoomSpeed;
+
+    if (newDistance < 0.1f) newDistance = 0.1f;
+    if (newDistance > 10.0f) newDistance = 10.0f;
+
+    offset = glm::normalize(offset) * newDistance;
+    camera->setRadius(glm::length(offset));
+    camera->move(target + offset);
+}
+
+void CameraControl::onDrag(double xPos, double yPos)
+{
+    float dx = xPos - lastMouseX;
+    float dy = yPos - lastMouseY;
+
+    lastMouseX = xPos;
+    lastMouseY = yPos;
+    
+    constexpr float sensitivity = 0.1f;
+    dx *= sensitivity;
+    dy *= sensitivity;
+
+    float newYaw = camera->getYaw() + dx;
+    float newPitch = camera->getPitch() + dy;
+
+    newPitch = newPitch > 89.0f ? 89.0f : newPitch;
+    newPitch = newPitch < -89.0f ? -89.0f : newPitch;
+
+    camera->setYaw(newYaw);
+    camera->setPitch(newPitch);
+
+    glm::vec3 direction;
+    direction.x = camera->getRadius() * cos(glm::radians(newYaw)) * cos(glm::radians(newPitch));
+    direction.y = camera->getRadius() * sin(glm::radians(newPitch));
+    direction.z = camera->getRadius() * sin(glm::radians(newYaw)) * cos(glm::radians(newPitch));
+
+    camera->move(target + direction);
+}
+
+void CameraControl::onMiddleButtonPress(bool state)
+{
+    middleMousePressed = state;
+    glfwGetCursorPos(window, &lastMouseX, &lastMouseY);
+}
+
+bool CameraControl::getMiddleButtonPressState() const
+{
+    return middleMousePressed;
+}

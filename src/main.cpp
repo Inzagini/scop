@@ -1,39 +1,5 @@
 #include "scop.hpp"
 
-// void processInput(GLFWwindow *window, Camera *camera)
-// {
-//     float rotationSpeed = 1.5f;
-//     float scaleSpeed = 1.0f * deltaTime;
-
-//     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-//             glfwSetWindowShouldClose(window, true);    
-
-//     //z axis forward
-//     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-//     {
-//         camera->setCameraPos({0.0f, 0.0f, -0.1f});
-//     }
-
-//     //z axis backward
-//     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-//     {
-//         camera->setCameraPos({0.0f, 0.0f, 0.1f});
-//     }  
-
-//     //x axis left
-//     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-//     {
-//         camera->setCameraPos({-0.1f, 0.0f, 0.0f});
-//     } 
-
-//     //x axis right
-//     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-//     {
-//         camera->setCameraPos({0.1f, 0.0f, 0.0f});
-//     } 
-    
-// }
-
 int main(int arc, char *argv[])
 {
     if (!glfwInit())
@@ -54,7 +20,7 @@ int main(int arc, char *argv[])
     ObjProp objProp;
     if (!parseObj("resources/teapot2.obj", objProp))
     {
-
+        std::cerr << "OBJECT PARSING FAILED\n";
         std::exit(-1);
     }
 
@@ -65,14 +31,12 @@ int main(int arc, char *argv[])
     cameraControler.init(window.get(), &camera);
     glfwSetWindowUserPointer(window.get(), &cameraControler);  
 
-    cameraControler.movementHandler(deltaTime);
-
     while (!glfwWindowShouldClose(window.get()))
     {
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;   
-
+        cameraControler.movementHandler(deltaTime);
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -82,7 +46,6 @@ int main(int arc, char *argv[])
         
         {
             shader.setMat4("model", gameObj.getTransform().getModel());
-
             shader.setCamera(camera);
             shader.setMaterialProp(objProp);
         }
