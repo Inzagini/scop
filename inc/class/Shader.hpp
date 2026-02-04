@@ -13,6 +13,7 @@
 
 #include "class/Mesh.hpp"
 #include "class/Camera.hpp"
+#include "MathUtils.hpp"
 
 class Shader {
 
@@ -25,6 +26,7 @@ class Shader {
         void setCamera(Camera &camera);
         void setLight();
         void setModel(glm::mat4 model);
+        void setModel(Mat4 model);
         void inputHandler(GLFWwindow *window);
 
     private:
@@ -38,6 +40,7 @@ class Shader {
         void setVec4(const std::string &name, float x, float y, float z, float w) const;
         void setMat3(const std::string &name, const glm::mat3 &mat) const;
         void setMat4(const std::string &name, const glm::mat4 &mat) const;
+        void setMat4(const std::string &name, const Mat4 &mat) const;
         void setVec3(const std::string &name, const glm::vec3 &value) const;
         void setFloat(const std::string &name, const float n) const;
         void setBool(const std::string &name, const bool n) const;

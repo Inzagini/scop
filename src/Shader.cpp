@@ -35,6 +35,11 @@ void Shader::setModel(glm::mat4 model)
     setMat4("model", model);
 }
 
+void Shader::setModel(Mat4 model)
+{
+    setMat4("model", model);
+}
+
 void Shader::colorToggle()
 {
     colorEnabled = !colorEnabled;
@@ -51,6 +56,7 @@ void Shader::inputHandler(GLFWwindow *window)
         colorToggle();
     }
     waspresssed = keyPress;
+
 }
 
 unsigned int Shader::createAndCompileShader(unsigned int type, const char* source)
@@ -152,6 +158,11 @@ void Shader::setMat3(const std::string &name, const glm::mat3 &mat) const
 void Shader::setMat4(const std::string &name, const glm::mat4 &mat) const
 {
     glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, &mat[0][0]);
+}
+
+void Shader::setMat4(const std::string &name, const Mat4 &mat) const
+{
+    glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, &mat.m[0][0]);
 }
 
 void Shader::setVec3(const std::string &name, const glm::vec3 &value) const
