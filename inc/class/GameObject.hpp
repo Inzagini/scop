@@ -11,7 +11,7 @@ class GameObject
         void    draw(Shader &shader);
         Mesh    *getMesh();
         Transform getTransform();
-        void movementHandler(float &dTime);
+        void movementHandler(GLFWwindow *window, float &dTime);
 
     private:
         Mesh        *mesh;

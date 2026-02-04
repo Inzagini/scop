@@ -30,7 +30,7 @@ class Transform {
         glm::vec3   getScale();
 
     private:
-        glm::vec3 position {0.0f};
+        glm::vec3 position {0.0f, 0.0f, 0.0f};
         glm::vec3 rotation {0.0f, 0.0f, 0.0f};
         glm::vec3 scale {0.5f};
 };

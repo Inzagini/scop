@@ -41,8 +41,11 @@ int main(int arc, char *argv[])
     {
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
-        lastFrame = currentFrame;   
+        lastFrame = currentFrame;
+        processInput(window.get());
+
         cameraControler.movementHandler(deltaTime);
+        gameObj.movementHandler(window.get(), deltaTime);
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -52,6 +55,7 @@ int main(int arc, char *argv[])
         
         {
             shader.setMat4("model", gameObj.getTransform().getModel());
+
             shader.setCamera(camera);
             shader.setMaterialProp(objProp);
         }

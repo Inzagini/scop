@@ -9,7 +9,10 @@
 class Camera
 {
     public:
-        glm::mat4   getView(void) const {return glm::lookAt(position, target, up);}
+        glm::mat4   getView(void) const
+        {
+            return glm::lookAt(position, target, up);
+        }
         glm::mat4   getProjection(void) const {return glm::perspective(glm::radians(fov), aspectRatio, nearPlane, farPlane);}
         glm::vec3   getPosition(void) const {return position;}
         void        move(const glm::vec3 n) {position = n;}

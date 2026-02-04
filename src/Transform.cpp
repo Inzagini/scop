@@ -7,7 +7,7 @@ glm::mat4 Transform::getModel() const
     glm::vec3 rotateY{0.0f, 1.0f, 0.0f};
     glm::vec3 rotateZ{0.0f, 0.0f, 1.0f};
 
-    // model = glm::translate(model, glm::vec3{0.0f});
+    model = glm::translate(model, position);
     model = glm::rotate(model, rotation.x, rotateX);
     model = glm::rotate(model, rotation.y, rotateY);
     model = glm::rotate(model, rotation.z, rotateZ);

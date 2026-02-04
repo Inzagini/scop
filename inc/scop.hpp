@@ -1,8 +1,8 @@
 #pragma once
 
-# include "glad/glad.h"
-# include <GLFW/glfw3.h>
-# include <iostream>
+#include "glad/glad.h"
+#include <GLFW/glfw3.h>
+#include <iostream>
 #include <vector>
 #include <cmath>
 
@@ -16,7 +16,7 @@
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
-
+void processInput(GLFWwindow *window);
 bool parseObj(const char *, ObjProp &obj);
 
 class Window;

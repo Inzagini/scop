@@ -34,7 +34,6 @@ class CameraControl
         CameraControl() = default;
         ~CameraControl() = default;
 
-        void WASDHandler(float &dTime);
         void mouseHandler(float &dTime);
 
         static void scrollCallback(GLFWwindow *window, double dx, double dy)
