@@ -209,6 +209,24 @@ bool parseObj(const char *filePath, ObjProp &obj)
             std::string dirPath = path.parent_path();
             obj.material = parseMaterial(dirPath + "/" + fileName);
         }
+        else if (prefix == "o")
+        {
+            //in future make it to handle multiple obj (voxel project)
+            continue;
+        }
+        else if (prefix == "usemtl") //not supported 
+        {
+            std::cerr << "USEMTL NOT SUPPORTED\n continuing...\n";
+        }
+        else if (prefix == "s") 
+        {
+            std::cerr << "SMOOTHING NOT SUPPORTED\n continuing...\n";
+        }
+        else
+        {
+            std::cerr << "CANNOT RECOGNIZE: " << line << '\n';
+            return false;
+        }
     }
     return true;
 }
