@@ -56,8 +56,8 @@ int main(int arc, char *argv[])
         shader.setLight();
         shader.inputHandler(window.get());
         {
-            Mat4 testMat;
-            shader.setModel(testMat);
+
+            shader.setModel(gameObj.getTransform().getModel());
             shader.setCamera(camera);
             shader.setMaterialProp(objProp);
         }

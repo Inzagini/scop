@@ -1,26 +1,23 @@
 #include "class/Transform.hpp"
 
-glm::mat4 Transform::getModel() const
+Mat4 Transform::getModel() const
 {
-    glm::mat4 model = glm::mat4(1.0f);
-    glm::vec3 rotateX{1.0f, 0.0f, 0.0f};
-    glm::vec3 rotateY{0.0f, 1.0f, 0.0f};
-    glm::vec3 rotateZ{0.0f, 0.0f, 1.0f};
+    Mat4 model;
 
-    model = glm::translate(model, position);
-    model = glm::rotate(model, rotation.x, rotateX);
-    model = glm::rotate(model, rotation.y, rotateY);
-    model = glm::rotate(model, rotation.z, rotateZ);
-    model = glm::scale(model, scale);
+    model = MathUtils::translate(model, position);
+    model = MathUtils::rotateX(model, MathUtils::radians(rotation.x));
+    model = MathUtils::rotateY(model, MathUtils::radians(rotation.y));
+    model = MathUtils::rotateZ(model, MathUtils::radians(rotation.z));
+    model = MathUtils::scale(model, scale);
 
     return model;
 }
 
-glm::mat4 Transform::translateView() const
+Mat4 Transform::translateView() const
 {
-    glm::mat4 view = glm::mat4(0.0f);
+    Mat4 view;
 
-    view = translate(view, position);
+    view = MathUtils::translate(view, position);
 
     return view;
 }
@@ -88,10 +85,12 @@ float Transform::getRotationZ()
 
 void Transform::setScale(float scaleSpeed)
 {
-    scale = scale + scaleSpeed;
+    scale.x = scale.x + scaleSpeed;
+    scale.y = scale.y + scaleSpeed;
+    scale.z = scale.z + scaleSpeed;
 }
 
-glm::vec3 Transform::getScale()
+Vec3 Transform::getScale()
 {
     return scale;
 }
