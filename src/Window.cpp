@@ -8,7 +8,7 @@ Window::Window()
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Scop", nullptr, nullptr);
-    if (window == nullptr)
+    if (!window)
     {
         std::cerr << "Window failed to create. Terminating\n";
         glfwTerminate();

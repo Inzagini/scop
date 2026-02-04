@@ -112,9 +112,13 @@ static Material parseMaterial(const std::string &fileName)
             ss >> r;
             mat.opacity = r;
         }
-        else if (prefix == "newmlt")
+        else if (prefix == "newmtl")
         {
             mtlCount += 1;
+        }
+        else if (prefix == "illum")
+        {
+            continue;
         }
         else
         {
@@ -131,6 +135,12 @@ static Material parseMaterial(const std::string &fileName)
 bool parseObj(const char *filePath, ObjProp &obj)
 { 
     std::filesystem::path path(filePath);
+
+    if (path.extension() != ".obj")
+    {
+        std::cerr << "File is not type .obj\n";
+        return false;
+    }
 
     std::ifstream file(filePath);
     if (!file)
@@ -163,23 +173,36 @@ bool parseObj(const char *filePath, ObjProp &obj)
         else if (prefix == "f")
         {
             unsigned int w{}, x{}, y{}, z{};
+            bool parsingIndicies = true;
 
-            if(validLine(line, 4, true))
+            if(validLine(line, 4, parsingIndicies))
             {
                 ss >> x >> y >> z;
                 pushToVector(x, y, z, 1u, obj.indices);
             }
-            else if(validLine(line, 5, true))
+            else if(validLine(line, 5, parsingIndicies))
             {
                 ss >> x >> y >> z >> w;
                 pushToVector(x, y, z, 1u, obj.indices);
                 pushToVector(x, y, w, 1u, obj.indices);
             }
+            else
+                return false;
         }
         else if (prefix == "mtllib")
         {
             if(!validLine(line, 2))
+            {
+                Material mat;
+                mat.ambient = glm::vec3(1.0f);
+                mat.diffuse = glm::vec3(1.0f);
+                mat.specular = glm::vec3(1.0f);
+                mat.opacity = 1.0f;
+                mat.shininess = 0.0f;
+
+                obj.material = mat;
                 break;
+            }
             std::string fileName;
             ss >> fileName;
 

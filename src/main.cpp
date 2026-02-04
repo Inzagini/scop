@@ -2,6 +2,12 @@
 
 int main(int arc, char *argv[])
 {
+    if (arc != 2)
+    {
+        std::cerr << "NUMBER OF ARGUMENT MUST BE ONLY 1\n";
+        std::exit(1);
+    }
+
     if (!glfwInit())
     {
         std::cerr << "Failed to initialize GLFW\n";
@@ -18,7 +24,7 @@ int main(int arc, char *argv[])
     glEnable(GL_DEPTH_TEST);
 
     ObjProp objProp;
-    if (!parseObj("resources/teapot2.obj", objProp))
+    if (!parseObj(argv[1], objProp))
     {
         std::cerr << "OBJECT PARSING FAILED\n";
         std::exit(-1);
