@@ -30,6 +30,30 @@ unsigned int Shader::getID()
     return ID;
 }
 
+void Shader::setModel(glm::mat4 model)
+{
+    setMat4("model", model);
+}
+
+void Shader::colorToggle()
+{
+    colorEnabled = !colorEnabled;
+    setBool("colorEnabled", colorEnabled);
+}
+
+void Shader::inputHandler(GLFWwindow *window)
+{
+    static bool waspresssed = false;
+    bool keyPress = glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS;
+
+    if ( keyPress && !waspresssed)
+    {
+        colorToggle();
+    }
+    waspresssed = keyPress;
+
+}
+
 unsigned int Shader::createAndCompileShader(unsigned int type, const char* source)
 {
     unsigned int shader = glCreateShader(type);
@@ -94,6 +118,7 @@ void Shader::setMaterialProp(ObjProp &objProp)
     setVec3("material.specular", objProp.material.specular);
     setFloat("material.opacity", objProp.material.opacity);
     setFloat("material.shininess", objProp.material.shininess);
+    setBool("colorEnable", colorEnabled);
 }
 
 void Shader::setCamera(Camera &camera)
@@ -138,4 +163,9 @@ void Shader::setVec3(const std::string &name, const glm::vec3 &value) const
 void Shader::setFloat(const std::string &name, const float n) const
 {
     glUniform1f(glGetUniformLocation(ID, name.c_str()), n);
+}
+
+void Shader::setBool(const std::string &name, const bool n) const
+{
+    glUniform1i(glGetUniformLocation(ID, name.c_str()), static_cast<int>(n));
 }

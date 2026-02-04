@@ -29,6 +29,11 @@ Transform GameObject::getTransform()
     return transform;
 }
 
+void GameObject::inputHandler(GLFWwindow *window, float &dTime)
+{
+    movementHandler(window, dTime);
+}
+
 void GameObject::movementHandler(GLFWwindow *window, float &dTime)
 {
     float speed = 2.0f;

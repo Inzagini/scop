@@ -16,7 +16,7 @@
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
-void processInput(GLFWwindow *window);
+void generalInputProcessing(GLFWwindow *window);
 bool parseObj(const char *, ObjProp &obj);
 
 class Window;

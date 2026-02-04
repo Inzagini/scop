@@ -36,26 +36,27 @@ int main(int arc, char *argv[])
     CameraControl &cameraControler = CameraControl::getInstance();
     cameraControler.init(window.get(), &camera);
     glfwSetWindowUserPointer(window.get(), &cameraControler);  
+    
 
     while (!glfwWindowShouldClose(window.get()))
     {
+        generalInputProcessing(window.get());
+
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
-        processInput(window.get());
-
+        
         cameraControler.movementHandler(deltaTime);
-        gameObj.movementHandler(window.get(), deltaTime);
+        gameObj.inputHandler(window.get(), deltaTime);
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         shader.use();
         shader.setLight();
-        
+        shader.inputHandler(window.get());
         {
-            shader.setMat4("model", gameObj.getTransform().getModel());
-
+            shader.setModel(gameObj.getTransform().getModel());
             shader.setCamera(camera);
             shader.setMaterialProp(objProp);
         }

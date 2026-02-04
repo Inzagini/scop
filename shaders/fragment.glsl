@@ -12,13 +12,12 @@ struct Material
 in vec3 Normal;
 in vec3 FragPos;
 
-
 uniform Material material;
 uniform vec3 lightDir;
 uniform vec3 lightPos;
 uniform vec3 lightColor;
 uniform vec3 viewPos;
-
+uniform bool colorEnabled;
 
 out vec4 FragColor;
 
@@ -30,8 +29,8 @@ void main()
    vec3 lightDir = normalize(lightPos - FragPos);
 
    float diff = max(dot(norm, lightDir), 0.0);
-   vec3 diffuse = (diff * material.diffuse) * lightColor;
 
+   vec3 diffuse = (diff * material.diffuse) * lightColor; 
 
 // Specular
    vec3 viewDir = normalize(viewPos - FragPos);
@@ -41,7 +40,12 @@ void main()
    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
    vec3 specular = lightColor * (spec * material.specular); 
    
-   vec3 color = (ambient + diffuse + specular);
+   vec3 finalColor;
+   
+   if (colorEnabled)
+      finalColor = (ambient + diffuse + specular);
+   else
+      finalColor = vec3(0.8f);
 
-   FragColor = vec4(color, material.opacity);
+   FragColor = vec4(finalColor, material.opacity);
 }
