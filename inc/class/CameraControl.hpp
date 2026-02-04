@@ -21,8 +21,8 @@ class CameraControl
         
 
     private:
-        const glm::vec3     target {0, 0, 0};
-        const glm::vec3     up {0, 1, 0};
+        const Vec3     target {0, 0, 0};
+        const Vec3     up {0, 1, 0};
         double lastMouseX {0.0};
         double lastMouseY {0.0};
 

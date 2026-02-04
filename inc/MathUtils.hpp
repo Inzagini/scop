@@ -34,6 +34,7 @@ namespace MathUtils
 {
     float radians(const float degree);
     float length(const glm::vec3 &);
+    float length(const Vec3 &);
     Mat4 multiply(const Mat4 &, const Mat4 &);
     // Mat4 translate(Mat4 &, Vec3 &);
     Mat4 translate(Mat4 , Vec3 );
@@ -41,5 +42,14 @@ namespace MathUtils
     Mat4 rotateX(Mat4, float angle);
     Mat4 rotateY(Mat4, float angle);
     Mat4 rotateZ(Mat4, float angle);
+    float dot(const Vec3 &, const Vec3 &);
+    Vec3 cross(const Vec3 &, const Vec3 &);
+    Mat4 lookAt(const Vec3& eye, const Vec3& center, const Vec3& up);
+    Vec3 normalize(const Vec3& v);
+
 };
+
+Vec3 operator-(const Vec3 &a, const Vec3 &b);
+Vec3 operator+(const Vec3 &a, const Vec3 &b);
+Vec3 operator*(const Vec3 &a, const float k);
 

@@ -10,6 +10,11 @@ float MathUtils::length(const glm::vec3 &v)
     return std::sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
 }
 
+float MathUtils::length(const Vec3 &v)
+{
+    return std::sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+}
+
 // Mat4 MathUtils::translate(Mat4 &mat, Vec3 &v)
 // {
 //     Mat4 res;
@@ -98,4 +103,76 @@ Mat4 MathUtils::scale(const Mat4 &mat, const Vec3 &v)
     r.m[2][2] *= v.z;
 
     return multiply(r, mat);
+}
+
+float MathUtils::dot(const Vec3 &a, const Vec3 &b)
+{
+    return (a.x * b.x + a.y * b.y + a.z * b.z);
+}
+
+Vec3 MathUtils::cross(const Vec3 &a, const Vec3 &b)
+{
+    return
+    {
+        a.y * b.z - a.z * b.y,
+        a.z * b.x - a.x * b.z,
+        a.x * b.y - a.y * b.x,
+    };
+}
+
+Vec3 operator-(const Vec3 &a, const Vec3 &b)
+{
+    return {a.x - b.x, a.y - b.y, a.z - b.z};
+}
+
+Vec3 operator+(const Vec3 &a, const Vec3 &b)
+{
+    return {a.x + b.x, a.y + b.y, a.z + b.z};
+}
+
+Vec3 operator*(const Vec3 &a, const float k)
+{
+    return {a.x * k, a.y * k, a.z *k};
+}
+
+Vec3 MathUtils::normalize(const Vec3& v)
+{
+    float len = MathUtils::length(v);
+
+    if (len == 0.0f)
+        return { 0.0f, 0.0f, 0.0f };
+
+    return {
+        v.x / len,
+        v.y / len,
+        v.z / len
+    };
+}
+
+
+Mat4 MathUtils::lookAt(const Vec3& eye, const Vec3& center, const Vec3& up)
+{
+    Vec3 f = normalize(center - eye);
+    Vec3 s = normalize(cross(f, up));
+    Vec3 u = cross(s, f);
+
+    Mat4 res;
+
+    res.m[0][0] =  s.x;
+    res.m[1][0] =  s.y;
+    res.m[2][0] =  s.z;
+
+    res.m[0][1] =  u.x;
+    res.m[1][1] =  u.y;
+    res.m[2][1] =  u.z;
+
+    res.m[0][2] = -f.x;
+    res.m[1][2] = -f.y;
+    res.m[2][2] = -f.z;
+
+    res.m[3][0] = -dot(s, eye);
+    res.m[3][1] = -dot(u, eye);
+    res.m[3][2] =  dot(f, eye);
+
+    return res;
 }
