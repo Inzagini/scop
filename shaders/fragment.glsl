@@ -45,7 +45,7 @@ void main()
    if (colorEnabled)
       finalColor = (ambient + diffuse + specular);
    else
-      finalColor = vec3(0.8f);
+      finalColor = vec3(0.7f);
 
    FragColor = vec4(finalColor, material.opacity);
 }

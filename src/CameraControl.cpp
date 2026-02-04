@@ -27,7 +27,7 @@ void CameraControl::onScroll(double dx, double dy)
 {
     glm::vec3 offset = camera->getPosition() - target;
     constexpr float zoomSpeed = 0.3f;
-    float distance = glm::length(offset);
+    float distance = MathUtils::length(offset);
 
     float newDistance = distance - float(dy) * zoomSpeed;
 
@@ -35,7 +35,7 @@ void CameraControl::onScroll(double dx, double dy)
     if (newDistance > 10.0f) newDistance = 10.0f;
 
     offset = glm::normalize(offset) * newDistance;
-    camera->setRadius(glm::length(offset));
+    camera->setRadius(MathUtils::length(offset));
     camera->move(target + offset);
 }
 
@@ -61,9 +61,9 @@ void CameraControl::onDrag(double xPos, double yPos)
     camera->setPitch(newPitch);
 
     glm::vec3 direction;
-    direction.x = camera->getRadius() * cos(glm::radians(newYaw)) * cos(glm::radians(newPitch));
-    direction.y = camera->getRadius() * sin(glm::radians(newPitch));
-    direction.z = camera->getRadius() * sin(glm::radians(newYaw)) * cos(glm::radians(newPitch));
+    direction.x = camera->getRadius() * cos(MathUtils::radians(newYaw)) * cos(MathUtils::radians(newPitch));
+    direction.y = camera->getRadius() * sin(MathUtils::radians(newPitch));
+    direction.z = camera->getRadius() * sin(MathUtils::radians(newYaw)) * cos(MathUtils::radians(newPitch));
 
     camera->move(target + direction);
 }

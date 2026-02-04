@@ -1,6 +1,7 @@
 #pragma once
 
 #include "class/Camera.hpp"
+#include "MathUtils.hpp"
 
 class CameraControl
 {

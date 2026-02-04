@@ -51,7 +51,6 @@ void Shader::inputHandler(GLFWwindow *window)
         colorToggle();
     }
     waspresssed = keyPress;
-
 }
 
 unsigned int Shader::createAndCompileShader(unsigned int type, const char* source)
