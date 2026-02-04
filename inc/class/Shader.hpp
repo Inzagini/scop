@@ -25,7 +25,6 @@ class Shader {
         void setMaterialProp(ObjProp &objprop);
         void setCamera(Camera &camera);
         void setLight();
-        void setModel(glm::mat4 model);
         void setModel(Mat4 model);
         void inputHandler(GLFWwindow *window);
 

@@ -33,6 +33,7 @@ struct Vec3
 namespace MathUtils
 {
     float radians(const float degree);
+    float degrees(const float rad);
     float length(const glm::vec3 &);
     float length(const Vec3 &);
     Mat4 multiply(const Mat4 &, const Mat4 &);
@@ -45,8 +46,8 @@ namespace MathUtils
     float dot(const Vec3 &, const Vec3 &);
     Vec3 cross(const Vec3 &, const Vec3 &);
     Mat4 lookAt(const Vec3& eye, const Vec3& center, const Vec3& up);
-    Vec3 normalize(const Vec3& v);
-
+    Vec3 normalize(const Vec3&);
+    Mat4 perspective(const float &fov, const float &aspect, const float &nearPlane, const float &farPlane);
 };
 
 Vec3 operator-(const Vec3 &a, const Vec3 &b);

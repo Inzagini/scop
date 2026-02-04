@@ -5,6 +5,11 @@ float MathUtils::radians(const float degree)
     return degree * (M_PI / 180);
 }
 
+float MathUtils::degrees(const float rad)
+{
+    return rad * (180 / M_PI);
+}
+
 float MathUtils::length(const glm::vec3 &v)
 {
     return std::sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
@@ -67,7 +72,7 @@ Mat4 MathUtils::rotateX(Mat4 mat, float angleRad)
     r.m[1][1] = c ; r.m[2][1] = -s;
     r.m[1][2] = s ; r.m[2][2] = c;
 
-    return MathUtils::multiply(mat, r);
+    return multiply(mat, r);
 }
 
 Mat4 MathUtils::rotateY(Mat4 mat, float angleRad)
@@ -79,7 +84,7 @@ Mat4 MathUtils::rotateY(Mat4 mat, float angleRad)
     r.m[0][0] = c ; r.m[2][0] = s;
     r.m[0][2] = -s ; r.m[2][2] = c;
 
-    return MathUtils::multiply(mat, r);
+    return multiply(mat, r);
 }
 
 Mat4 MathUtils::rotateZ(Mat4 mat, float angleRad)
@@ -91,7 +96,7 @@ Mat4 MathUtils::rotateZ(Mat4 mat, float angleRad)
     r.m[0][0] = c ; r.m[1][0] = -s;
     r.m[0][1] = s ; r.m[1][1] = c;
 
-    return MathUtils::multiply(mat, r);
+    return multiply(mat, r);
 }
 
 Mat4 MathUtils::scale(const Mat4 &mat, const Vec3 &v)
@@ -137,7 +142,7 @@ Vec3 operator*(const Vec3 &a, const float k)
 
 Vec3 MathUtils::normalize(const Vec3& v)
 {
-    float len = MathUtils::length(v);
+    float len = length(v);
 
     if (len == 0.0f)
         return { 0.0f, 0.0f, 0.0f };
@@ -173,6 +178,22 @@ Mat4 MathUtils::lookAt(const Vec3& eye, const Vec3& center, const Vec3& up)
     res.m[3][0] = -dot(s, eye);
     res.m[3][1] = -dot(u, eye);
     res.m[3][2] =  dot(f, eye);
+
+    return res;
+}
+
+Mat4 MathUtils::perspective(const float &fov, const float &aspect, const float &nearPlane, const float &farPlane)
+{
+    Mat4 res;
+
+    const float f = 1.0f / std::tan(fov / 2.0f);
+
+    res.m[0][0] = f / aspect;
+    res.m[1][1] = f;
+    res.m[2][2] = (farPlane + nearPlane) / (nearPlane - farPlane);
+    res.m[2][3] = -1.0f;
+    res.m[3][2] = (2.0f * farPlane * nearPlane) / (nearPlane - farPlane);
+    res.m[3][3] = 0.0f;
 
     return res;
 }

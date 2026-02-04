@@ -30,11 +30,6 @@ unsigned int Shader::getID()
     return ID;
 }
 
-void Shader::setModel(glm::mat4 model)
-{
-    setMat4("model", model);
-}
-
 void Shader::setModel(Mat4 model)
 {
     setMat4("model", model);
