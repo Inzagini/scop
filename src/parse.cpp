@@ -10,6 +10,7 @@
 #include "glm/gtc/type_ptr.hpp"
 
 #include "class/Mesh.hpp"
+#include "MathUtils.hpp"
 
 template<typename T, typename U>
 void pushToVector(T x, T y, T z, T offset,std::vector<U> &vec)
@@ -42,27 +43,21 @@ static bool validLine(const std::string &line, const size_t expectedSize, bool i
 }
 
 
-static Material parseMaterial(const std::string &fileName)
+static bool parseMaterial(const std::string &fileName, Material &mat)
 {
-    
-    Material mat;
-    mat.ambient = glm::vec3(1.0f);
-    mat.diffuse = glm::vec3(1.0f);
-    mat.specular = glm::vec3(1.0f);
-    mat.opacity = 1.0f;
-    mat.shininess = 0.0f;
-
     std::ifstream file(fileName);
     if (!file)
     {
         std::cerr << "UNABLE TO OPEN MTL FILE: " << fileName << '\n';
-        return mat;
+        return false;
     }
 
     std::cout << "OPENED: " << fileName << '\n';
 
+    Material tmpMat;
     std::string line;
     int mtlCount{};
+    bool valid = true;
 
     while (std::getline(file, line))
     {
@@ -79,38 +74,39 @@ static Material parseMaterial(const std::string &fileName)
         if (prefix == "Ns")
         {
             if(!validLine(line, 2))
-                break;
+                return false;
             
             ss >> r;
-            mat.shininess = r;
+            tmpMat.shininess = r;
         }
         else if (prefix == "Ka")
         {
             if(!validLine(line, 4))
-                break;
+                return false;
+
             ss >> r >> g >> b;
-            mat.ambient = glm::vec3(r, g, b);
+            tmpMat.ambient = Vec3(r, g, b);
         }
         else if (prefix == "Kd")
         {
             if(!validLine(line, 4))
-                break;
+                return false;
             ss >> r >> g >> b;
-            mat.diffuse = glm::vec3(r, g, b);
+            tmpMat.diffuse = Vec3(r, g, b);
         }
         else if (prefix == "Ks")
         {
             if(!validLine(line, 4))
-                break;
+                return false;
             ss >> r >> g >> b;
-            mat.specular = glm::vec3(r, g, b);
+            tmpMat.specular = Vec3(r, g, b);
         }
         else if (prefix == "d")
         {
             if(!validLine(line, 2))
-                break;
+                return false;
             ss >> r;
-            mat.opacity = r;
+            tmpMat.opacity = r;
         }
         else if (prefix == "newmtl")
         {
@@ -129,7 +125,9 @@ static Material parseMaterial(const std::string &fileName)
     if (mtlCount > 1)
         std::cerr << "ONLY 1 MATERIAL IS SUPPORTED\n";
 
-    return mat;
+    mat = tmpMat;
+
+    return true;
 }
 
 bool parseObj(const char *filePath, ObjProp &obj)
@@ -151,6 +149,15 @@ bool parseObj(const char *filePath, ObjProp &obj)
 
     std::cout << "OPENED: " << filePath << '\n';
 
+    Material mat; //defaut setting
+    mat.ambient = Vec3(0.0f);
+    mat.diffuse = Vec3(0.8f);
+    mat.specular = Vec3(1.0f);
+    mat.opacity = 1.0f;
+    mat.shininess = 32.0f;
+
+    obj.material = mat;
+
     std::string line;
     while (std::getline(file, line))
     {
@@ -166,25 +173,27 @@ bool parseObj(const char *filePath, ObjProp &obj)
             if(!validLine(line, 4, true))
                 return false;
             float x{}, y{}, z{};
+            const float offset{0.0f};
 
             ss >> x >> y >> z;
-            pushToVector(x, y, z, 0.0f, obj.vertices);
+            pushToVector(x, y, z, offset, obj.vertices);
         }
         else if (prefix == "f")
         {
             unsigned int w{}, x{}, y{}, z{};
+            unsigned int offset{1};
             bool parsingIndicies = true;
 
             if(validLine(line, 4, parsingIndicies))
             {
                 ss >> x >> y >> z;
-                pushToVector(x, y, z, 1u, obj.indices);
+                pushToVector(x, y, z, offset, obj.indices);
             }
             else if(validLine(line, 5, parsingIndicies))
             {
                 ss >> x >> y >> z >> w;
-                pushToVector(x, y, z, 1u, obj.indices);
-                pushToVector(x, y, w, 1u, obj.indices);
+                pushToVector(x, y, z, offset, obj.indices);
+                pushToVector(x, z, w, offset, obj.indices);
             }
             else
                 return false;
@@ -192,22 +201,14 @@ bool parseObj(const char *filePath, ObjProp &obj)
         else if (prefix == "mtllib")
         {
             if(!validLine(line, 2))
-            {
-                Material mat;
-                mat.ambient = glm::vec3(1.0f);
-                mat.diffuse = glm::vec3(1.0f);
-                mat.specular = glm::vec3(1.0f);
-                mat.opacity = 1.0f;
-                mat.shininess = 0.0f;
-
-                obj.material = mat;
                 break;
-            }
+
             std::string fileName;
             ss >> fileName;
 
             std::string dirPath = path.parent_path();
-            obj.material = parseMaterial(dirPath + "/" + fileName);
+            if (!parseMaterial(dirPath + "/" + fileName, obj.material))
+                std::cerr << "MATERIAL parse failed \n Skipping... USING DEFAULT\n";
         }
         else if (prefix == "o")
         {

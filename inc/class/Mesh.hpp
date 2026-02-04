@@ -4,12 +4,13 @@
 #include <GLFW/glfw3.h>
 #include <vector>
 #include "glm/glm.hpp"
+#include "MathUtils.hpp"
 
 struct Material
 {
-    glm::vec3 ambient;
-    glm::vec3 diffuse;
-    glm::vec3 specular;
+    Vec3 ambient;
+    Vec3 diffuse;
+    Vec3 specular;
     float opacity;
     float shininess;
 };

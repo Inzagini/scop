@@ -20,17 +20,17 @@ float MathUtils::length(const Vec3 &v)
     return std::sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
 }
 
-// Mat4 MathUtils::translate(Mat4 &mat, Vec3 &v)
-// {
-//     Mat4 res;
+Mat4 MathUtils::translate(Mat4 &mat, Vec3 &v)
+{
+    Mat4 res;
 
-//     res.m[3][0] = mat.m[0][0] * v.x + mat.m[1][0] * v.y + mat.m[2][0] * v.z + mat.m[3][0];
-//     res.m[3][1] = mat.m[0][1] * v.x + mat.m[1][1] * v.y + mat.m[2][1] * v.z + mat.m[3][1];
-//     res.m[3][2] = mat.m[0][2] * v.x + mat.m[1][2] * v.y + mat.m[2][2] * v.z + mat.m[3][2];
-//     res.m[3][3] = mat.m[3][3];
+    res.m[3][0] = mat.m[0][0] * v.x + mat.m[1][0] * v.y + mat.m[2][0] * v.z + mat.m[3][0];
+    res.m[3][1] = mat.m[0][1] * v.x + mat.m[1][1] * v.y + mat.m[2][1] * v.z + mat.m[3][1];
+    res.m[3][2] = mat.m[0][2] * v.x + mat.m[1][2] * v.y + mat.m[2][2] * v.z + mat.m[3][2];
+    res.m[3][3] = mat.m[3][3];
 
-//     return res;
-// }
+    return res;
+}
 
 Mat4 MathUtils::translate(Mat4 mat, Vec3 v)
 {

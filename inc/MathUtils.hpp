@@ -37,7 +37,7 @@ namespace MathUtils
     float length(const glm::vec3 &);
     float length(const Vec3 &);
     Mat4 multiply(const Mat4 &, const Mat4 &);
-    // Mat4 translate(Mat4 &, Vec3 &);
+    Mat4 translate(Mat4 &, Vec3 &);
     Mat4 translate(Mat4 , Vec3 );
     Mat4 scale(const Mat4 &, const Vec3 &);
     Mat4 rotateX(Mat4, float angle);
