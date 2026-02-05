@@ -92,6 +92,7 @@ scop/
   ```
 - Use the following controls to navigate the 3D scene:
   - `W`, `A`, `S`, `D`:  Move the object in space.
+  - `F`: Toggle texture rendering.
   - Hold and drag the scroll mouse button: Rotate the camera.
   - Scroll the mouse button: Zoom in and out.
   - `Esc`: Exit the application.
