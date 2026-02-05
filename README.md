@@ -63,7 +63,7 @@ scop/
 
 - A C++ compiler that supports C++17 or later.
 - OpenGL development libraries.
-- CMake (optional, if you want to use CMake for building).
+- Make.
 
 ## Installation 🚀
 
