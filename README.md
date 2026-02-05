@@ -2,7 +2,7 @@
 
 Scop is a lightweight 3D rendering project designed to load and render `.obj` files. It is built using OpenGL and C++ and is intended to provide a simple and efficient way to visualize 3D models.
 
-![Scop Screenshot](resources/screenshot/window.png)
+![Scop Screenshot](resources/screenshot/video.mp4)
 
 ## Features ✨
 
