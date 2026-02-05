@@ -1,8 +1,8 @@
-# Scop - OBJ File Renderer
+# Scop - OBJ File Renderer 🎨
 
 Scop is a lightweight 3D rendering project designed to load and render `.obj` files. It is built using OpenGL and C++ and is intended to provide a simple and efficient way to visualize 3D models.
 
-## Features
+## Features ✨
 
 - Load and render `.obj` files.
 - Support for `.mtl` material files.
@@ -10,7 +10,7 @@ Scop is a lightweight 3D rendering project designed to load and render `.obj` fi
 - Shader-based rendering pipeline.
 - Lightweight and easy to use.
 
-## Project Structure
+## Project Structure 📂
 
 ```
 scop/
@@ -39,7 +39,9 @@ scop/
 │       └── Window.hpp
 ├── obj/
 ├── resources/
+│   ├── 42.obj
 │   ├── 42.mtl
+│   ├── teapot2.obj
 │   └── teapot2.mtl
 ├── shaders/
 │   ├── fragment.glsl
@@ -57,13 +59,13 @@ scop/
     └── Window.cpp
 ```
 
-## Prerequisites
+## Prerequisites 🛠️
 
 - A C++ compiler that supports C++17 or later.
 - OpenGL development libraries.
 - CMake (optional, if you want to use CMake for building).
 
-## Installation
+## Installation 🚀
 
 1. Clone the repository:
    ```bash
@@ -78,22 +80,24 @@ scop/
 
 3. Run the application:
    ```bash
-   ./scop
+   ./scop [path to .obj file]
    ```
 
-## Usage
+## Usage 🎮
 
-- Place your `.obj` and `.mtl` files in the `resources/` directory.
+- Place your `.obj` and `.mtl` files in the `resources/` directory or anywhere else.
 - Run the application and provide the path to the `.obj` file as a command-line argument:
   ```bash
   ./scop resources/your_model.obj
   ```
 - Use the following controls to navigate the 3D scene:
-  - `W`, `A`, `S`, `D`: Move the camera.
-  - Mouse: Rotate the camera.
+  - `W`, `A`, `S`, `D`:  Move the object in space.
+  - Hold and drag the scroll mouse button: Rotate the camera.
+  - Scroll the mouse button: Zoom in and out.
   - `Esc`: Exit the application.
 
-## File Descriptions
+
+## File Descriptions 📜
 
 - `src/`: Contains the source code for the project.
 - `inc/`: Header files for the project.
@@ -102,15 +106,15 @@ scop/
 - `resources/`: Example `.obj` and `.mtl` files.
 - `Makefile`: Build script for compiling the project.
 
-## Contributing
+## Contributing 🤝
 
 Contributions are welcome! Feel free to open issues or submit pull requests to improve the project.
 
-## License
+## License 📄
 
 This project is licensed under the MIT License. See the LICENSE file for details.
 
-## Acknowledgments
+## Acknowledgments 🙌
 
 - [GLM](https://github.com/g-truc/glm) - OpenGL Mathematics library.
 - [GLAD](https://github.com/Dav1dde/glad) - OpenGL loader generator.
@@ -118,4 +122,4 @@ This project is licensed under the MIT License. See the LICENSE file for details
 
 ---
 
-Happy rendering!
+Happy rendering! 🎉
