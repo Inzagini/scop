@@ -47,9 +47,8 @@ void Shader::inputHandler(GLFWwindow *window)
     bool keyPress = glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS;
 
     if ( keyPress && !waspresssed)
-    {
         colorToggle();
-    }
+
     waspresssed = keyPress;
 
 }
@@ -118,7 +117,7 @@ void Shader::setMaterialProp(ObjProp &objProp)
     setVec3("material.specular", objProp.material.specular);
     setFloat("material.opacity", objProp.material.opacity);
     setFloat("material.shininess", objProp.material.shininess);
-    setBool("colorEnable", colorEnabled);
+    setBool("colorEnabled", colorEnabled);
 }
 
 void Shader::setCamera(Camera &camera)
@@ -130,39 +129,20 @@ void Shader::setCamera(Camera &camera)
 
 void Shader::setLight()
 {
-    setVec3("lightDir", glm::normalize(glm::vec3(1.0f, 1.0f, 1.0f)));
-    setVec3("lightPos", glm::vec3(1.0f, 1.0f, 1.0f));
-    setVec3("lightColor", glm::vec3(1.0f)); //white light
+    setVec3("lightDir", MathUtils::normalize(Vec3(1.0f, 1.0f, 1.0f)));
+    setVec3("lightPos", Vec3(1.0f, 1.0f, 1.0f));
+    setVec3("lightColor", Vec3(1.0f)); //white light
 }
 
-void Shader::setVec4(const std::string &name, const glm::vec4 &value) const
-{
-    glUniform4fv(glGetUniformLocation(ID, name.c_str()), 1, &value[0]); 
-}
 
 void Shader::setVec4(const std::string &name, float x, float y, float z, float w) const
-{ 
-    glUniform4f(glGetUniformLocation(ID, name.c_str()), x, y, z, w); 
-}
-
-void Shader::setMat3(const std::string &name, const glm::mat3 &mat) const
 {
-    glUniformMatrix3fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, &mat[0][0]);
-}
-// ------------------------------------------------------------------------
-void Shader::setMat4(const std::string &name, const glm::mat4 &mat) const
-{
-    glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, &mat[0][0]);
+    glUniform4f(glGetUniformLocation(ID, name.c_str()), x, y, z, w);
 }
 
 void Shader::setMat4(const std::string &name, const Mat4 &mat) const
 {
     glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, &mat.m[0][0]);
-}
-
-void Shader::setVec3(const std::string &name, const glm::vec3 &value) const
-{
-    glUniform3fv(glGetUniformLocation(ID, name.c_str()), 1, &value[0]);
 }
 
 void Shader::setVec3(const std::string &name, const Vec3 &value) const

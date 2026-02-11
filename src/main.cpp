@@ -1,5 +1,25 @@
 #include "scop.hpp"
 
+//check if os is arch
+
+bool isArch()
+{
+    std::ifstream file("/etc/os-release");
+
+    if (!file.is_open())
+        return false;
+
+    std::string line;
+
+    while (std::getline(file, line))
+    {
+        if (line.find("ID=arch") != std::string::npos)
+            return true;
+    }
+
+    return false;
+}
+
 int main(int arc, char *argv[])
 {
     if (arc != 2)
@@ -18,10 +38,13 @@ int main(int arc, char *argv[])
     Camera camera;
     Shader shader("shaders/vertex.glsl", "shaders/fragment.glsl");
 
-    int fbWidth, fbHeight;
-    glfwGetFramebufferSize(window.get(), &fbWidth, &fbHeight);
-    glViewport(0, 0, fbWidth, fbHeight);
-    glEnable(GL_DEPTH_TEST);
+    if (isArch()) //setting for arch
+    {
+        int fbWidth, fbHeight;
+        glfwGetFramebufferSize(window.get(), &fbWidth, &fbHeight);
+        glViewport(0, 0, fbWidth, fbHeight);
+        glEnable(GL_DEPTH_TEST);
+    }
 
     ObjProp objProp;
     if (!parseObj(argv[1], objProp))
@@ -32,11 +55,11 @@ int main(int arc, char *argv[])
 
     Mesh mesh1(objProp, 3, GL_STATIC_DRAW);
     GameObject gameObj(mesh1);
-    
+
     CameraControl &cameraControler = CameraControl::getInstance();
     cameraControler.init(window.get(), &camera);
-    glfwSetWindowUserPointer(window.get(), &cameraControler);  
-    
+    glfwSetWindowUserPointer(window.get(), &cameraControler);
+
 
     while (!glfwWindowShouldClose(window.get()))
     {
@@ -45,8 +68,8 @@ int main(int arc, char *argv[])
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
-        
-        cameraControler.movementHandler(deltaTime);
+
+        cameraControler.movementHandler();
         gameObj.inputHandler(window.get(), deltaTime);
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -61,9 +84,9 @@ int main(int arc, char *argv[])
             shader.setCamera(camera);
             shader.setMaterialProp(objProp);
         }
-        
-        gameObj.draw(shader);
-       
+
+        gameObj.draw();
+
         glfwSwapBuffers(window.get());
         glfwPollEvents();
     }

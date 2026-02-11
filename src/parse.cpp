@@ -6,9 +6,6 @@
 #include <sstream>
 #include <filesystem>
 
-#include "glm/glm.hpp"
-#include "glm/gtc/type_ptr.hpp"
-
 #include "class/Mesh.hpp"
 #include "MathUtils.hpp"
 
@@ -35,9 +32,9 @@ static bool validLine(const std::string &line, const size_t expectedSize, bool i
     if (vec.size() == expectedSize)
         return true;
 
-    
+
     if (!indicies && vec.size() == 4)
-        std::cerr << "Invalid line: " << line << '\n';     
+        std::cerr << "Invalid line: " << line << '\n';
 
     return false;
 }
@@ -57,25 +54,24 @@ static bool parseMaterial(const std::string &fileName, Material &mat)
     Material tmpMat;
     std::string line;
     int mtlCount{};
-    bool valid = true;
 
     while (std::getline(file, line))
     {
         if (line.empty() || line[0] == '#') continue;
 
-        
+
         std::stringstream ss(line);
         std::string prefix;
         ss >> prefix;
 
         float r{}, g{}, b{}; //r is reused for float
-        
+
 
         if (prefix == "Ns")
         {
             if(!validLine(line, 2))
                 return false;
-            
+
             ss >> r;
             tmpMat.shininess = r;
         }
@@ -121,7 +117,7 @@ static bool parseMaterial(const std::string &fileName, Material &mat)
             std::cerr << "CANNOT RECOGNIZE: " << prefix << '\n';
         }
     }
-    
+
     if (mtlCount > 1)
         std::cerr << "ONLY 1 MATERIAL IS SUPPORTED\n";
 
@@ -131,7 +127,7 @@ static bool parseMaterial(const std::string &fileName, Material &mat)
 }
 
 bool parseObj(const char *filePath, ObjProp &obj)
-{ 
+{
     std::filesystem::path path(filePath);
 
     if (path.extension() != ".obj")
@@ -215,11 +211,11 @@ bool parseObj(const char *filePath, ObjProp &obj)
             //in future make it to handle multiple obj (voxel project)
             continue;
         }
-        else if (prefix == "usemtl") //not supported 
+        else if (prefix == "usemtl") //not supported
         {
             std::cerr << "USEMTL NOT SUPPORTED\n continuing...\n";
         }
-        else if (prefix == "s") 
+        else if (prefix == "s")
         {
             std::cerr << "SMOOTHING NOT SUPPORTED\n continuing...\n";
         }

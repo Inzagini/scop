@@ -10,11 +10,6 @@ float MathUtils::degrees(const float rad)
     return rad * (180 / M_PI);
 }
 
-float MathUtils::length(const glm::vec3 &v)
-{
-    return std::sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
-}
-
 float MathUtils::length(const Vec3 &v)
 {
     return std::sqrt(v.x * v.x + v.y * v.y + v.z * v.z);

@@ -8,11 +8,11 @@ class GameObject
 {
     public:
         GameObject(Mesh &mesh) : mesh(&mesh) {}
-        void    draw(Shader &shader);
+        void    draw();
         Mesh    *getMesh();
         Transform getTransform();
         void      inputHandler(GLFWwindow *window, float &dTime);
-    
+
     private:
         void movementHandler(GLFWwindow *window, float &dTime);
 

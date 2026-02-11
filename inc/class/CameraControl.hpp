@@ -17,8 +17,8 @@ class CameraControl
             return instance;
         }
 
-        void movementHandler(float &n);
-        
+        void movementHandler();
+
 
     private:
         const Vec3     target {0, 0, 0};
@@ -35,7 +35,7 @@ class CameraControl
         CameraControl() = default;
         ~CameraControl() = default;
 
-        void mouseHandler(float &dTime);
+        void mouseHandler();
 
         static void scrollCallback(GLFWwindow *window, double dx, double dy)
         {
@@ -46,9 +46,9 @@ class CameraControl
         void onScroll(double dx, double dy);
 
         static void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
-            
+
             CameraControl* ctrl = static_cast<CameraControl*>(glfwGetWindowUserPointer(window));
-            
+            mods = mods;
             if (button == GLFW_MOUSE_BUTTON_MIDDLE)
             {
                 if (action == GLFW_PRESS && ctrl)

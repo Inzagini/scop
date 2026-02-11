@@ -1,9 +1,6 @@
 #pragma once
 
 #include <cmath>
-#include "glm/glm.hpp"
-#include "glm/gtc/matrix_transform.hpp"
-#include "glm/gtc/type_ptr.hpp"
 
 struct Mat4
 {
@@ -34,7 +31,6 @@ namespace MathUtils
 {
     float radians(const float degree);
     float degrees(const float rad);
-    float length(const glm::vec3 &);
     float length(const Vec3 &);
     Mat4 multiply(const Mat4 &, const Mat4 &);
     Mat4 translate(Mat4 &, Vec3 &);

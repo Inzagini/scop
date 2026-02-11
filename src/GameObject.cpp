@@ -1,6 +1,6 @@
 #include "class/GameObject.hpp"
 
-void GameObject::draw(Shader &shader)
+void GameObject::draw()
 {
     const float solid {1.0f};
 
@@ -12,7 +12,7 @@ void GameObject::draw(Shader &shader)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glDepthMask(GL_FALSE);
         mesh->draw();
-        glDepthMask(GL_TRUE); 
+        glDepthMask(GL_TRUE);
         glDisable(GL_BLEND);
     }
     else

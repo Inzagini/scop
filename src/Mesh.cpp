@@ -12,7 +12,7 @@ Mesh::Mesh(const ObjProp &obj, const unsigned int &size, const unsigned int draw
 
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, obj.vertices.size() * sizeof(float), obj.vertices.data(), GL_STATIC_DRAW); 
+    glBufferData(GL_ARRAY_BUFFER, obj.vertices.size() * sizeof(float), obj.vertices.data(), GL_STATIC_DRAW);
 
     if (!obj.indices.empty())
     {
@@ -51,7 +51,7 @@ void Mesh::draw()
     glBindVertexArray(0);
 }
 
-const float Mesh::getOpacity() const
+float Mesh::getOpacity() const
 {
     return opacity;
 }

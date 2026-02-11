@@ -1,6 +1,6 @@
 CXX:= g++
 NAME:= scop
-CXXFLAGS:= -std=c++20 -ldl -lglfw -lGL -g -MMD -MP
+CXXFLAGS:= -std=c++20 -ldl -lglfw -lGL -g -MMD -MP -Wall -Werror -Wextra
 INCLUDES:= -I. -I inc -I glad/include
 SRC_DIR:= src
 SRCS:= main.cpp Window.cpp Shader.cpp Mesh.cpp Transform.cpp GameObject.cpp \
@@ -17,7 +17,7 @@ $(NAME): $(OBJ_DIR) $(OBJS)
 	$(CXX)  $(OBJS) $(GLAD) $(CXXFLAGS) $(INCLUDES) -o $(NAME)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
-	$(CXX) $(CXXFLAGS) -I$(INCLUDES) -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
 
 $(OBJ_DIR):
 	mkdir -p $(OBJ_DIR)

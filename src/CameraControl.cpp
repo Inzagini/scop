@@ -8,12 +8,12 @@ void CameraControl::init(GLFWwindow *window, Camera *camera)
     this->camera = camera;
 }
 
-void CameraControl::movementHandler(float &dTime)
+void CameraControl::movementHandler()
 {
-    mouseHandler(dTime);
+    mouseHandler();
 }
 
-void CameraControl::mouseHandler(float &dTime)
+void CameraControl::mouseHandler()
 {
     //handling the scrollwheel
     glfwSetScrollCallback(window, scrollCallback);
@@ -25,6 +25,7 @@ void CameraControl::mouseHandler(float &dTime)
 
 void CameraControl::onScroll(double dx, double dy)
 {
+    dx = dx; //not used
     Vec3 offset = camera->getPosition() - target;
     constexpr float zoomSpeed = 0.3f;
     float distance = MathUtils::length(offset);
@@ -46,7 +47,7 @@ void CameraControl::onDrag(double xPos, double yPos)
 
     lastMouseX = xPos;
     lastMouseY = yPos;
-    
+
     constexpr float sensitivity = 0.1f;
     dx *= sensitivity;
     dy *= sensitivity;

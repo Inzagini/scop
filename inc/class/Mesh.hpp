@@ -3,7 +3,6 @@
 #include "glad/glad.h"
 #include <GLFW/glfw3.h>
 #include <vector>
-#include "glm/glm.hpp"
 #include "MathUtils.hpp"
 
 struct Material
@@ -31,7 +30,7 @@ class Mesh
         Mesh(const ObjProp &obj, const unsigned int &size, const unsigned int drawType);
         ~Mesh();
         void draw();
-        const float getOpacity() const;
+        float getOpacity() const;
 
     private:
         size_t          indexCount{};
