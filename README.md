@@ -127,7 +127,7 @@ scop/
 - `obj/`: Additional object/build-related files, if generated or used by the project.
 - `lsan.supp`: LeakSanitizer suppression configuration for imported libary.
 
-##AI Usage 🤖
+## AI Usage 🤖
 AI tools were used as an auxiliary resource during the development of this project.
 
 AI assistance was used for tasks such as:
