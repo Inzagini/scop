@@ -1,4 +1,4 @@
-This project has been created as part of the 42 curriculum by quannguy.
+This project has been created as part of the 42 curriculum by `quannguy`.
 
 # 🖤 Scop - Your Minimalist OBJ File Renderer
 
