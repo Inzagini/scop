@@ -49,9 +49,9 @@ void GameObject::movementHandler(GLFWwindow* window, float& dTime) {
     centerObj();
   }
   if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
-    transform.setRotationY(transform.getRotationY() - speed * dTime * 10);
+    transform.setRotationY(transform.getRotationY() - speed * dTime * 30);
   }
   if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
-    transform.setRotationY(transform.getRotationY() + speed * dTime * 10);
+    transform.setRotationY(transform.getRotationY() + speed * dTime * 30);
   }
 }
