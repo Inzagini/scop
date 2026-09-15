@@ -19,6 +19,22 @@ void pushToVector(T x, T y, T z, T offset, std::vector<U>& vec) {
 
 namespace {
 
+// Strip UTF-8 BOM, leading whitespace, and trailing CR/whitespace.
+std::string_view normalise(std::string_view s, bool firstLine) {
+  if (firstLine && s.size() >= 3 && static_cast<unsigned char>(s[0]) == 0xEF &&
+      static_cast<unsigned char>(s[1]) == 0xBB &&
+      static_cast<unsigned char>(s[2]) == 0xBF)
+    s.remove_prefix(3);
+
+  while (!s.empty() && (s.front() == ' ' || s.front() == '\t'))
+    s.remove_prefix(1);
+  while (!s.empty() &&
+         (s.back() == '\r' || s.back() == ' ' || s.back() == '\t'))
+    s.remove_suffix(1);
+
+  return s;
+}
+
 // Split "v 1.0 2.0 3.0" -> {"v", "1.0 2.0 3.0"}.
 std::pair<std::string_view, std::string_view>
 splitFirst(std::string_view line) {
@@ -78,7 +94,7 @@ static bool validLine(const std::string& line, const size_t expectedSize,
     return true;
 
   if (!indicies && vec.size() == 4)
-    std::cerr << "Invalid line: " << line << '\n';
+    std::cerr << "Invalid line: " << line << std::endl;
 
   return false;
 }
@@ -87,10 +103,10 @@ static bool parseMaterial(const std::filesystem::path& fileName,
                           Material& mat) {
   std::ifstream file(fileName);
   if (!file) {
-    std::cerr << "UNABLE TO OPEN MTL FILE: " << fileName << '\n';
+    std::cerr << "UNABLE TO OPEN MTL FILE: " << fileName << std::endl;
     return false;
   }
-  std::cout << "OPENED: " << fileName << '\n';
+  std::cout << "OPENED MTL FILE: " << fileName << '\n';
 
   Material tmp;
   int mtlCount = 0;
@@ -104,13 +120,14 @@ static bool parseMaterial(const std::filesystem::path& fileName,
     return true;
   };
 
+  int lineNum{1};
+
   while (std::getline(file, raw)) {
-    std::string_view line = raw;
+    std::string_view line = normalise(raw, lineNum == 1);
     if (line.empty() || line.front() == '#')
       continue;
 
     auto [prefix, rest] = splitFirst(line);
-
     if (prefix == "Ns") {
       if (!parseAll(rest, tmp.shininess))
         return false;
@@ -130,11 +147,13 @@ static bool parseMaterial(const std::filesystem::path& fileName,
       ++mtlCount;
     } else if (prefix == "illum") { /* ignored */
     } else
-      std::cerr << "CANNOT RECOGNIZE: " << prefix << '\n';
+      std::cerr << "CANNOT RECOGNIZE: " << prefix << "on line: " << lineNum
+                << "." << std::endl;
+    lineNum += 1;
   }
 
   if (mtlCount > 1)
-    std::cerr << "ONLY 1 MATERIAL IS SUPPORTED\n";
+    std::cerr << "ONLY 1 MATERIAL IS SUPPORTED" << std::endl;
 
   mat = tmp;
   return true;
@@ -143,23 +162,25 @@ bool parseObj(const char* filePath, ObjProp& obj) {
   std::filesystem::path path(filePath);
 
   if (path.extension() != ".obj") {
-    std::cerr << "File is not type .obj\n";
+    std::cerr << "File is not type .obj" << std::endl;
     return false;
   }
 
   std::ifstream file(filePath);
   if (!file) {
-    std::cerr << "UNABLE TO OPEN OBJECT FILE\n";
+    std::cerr << "UNABLE TO OPEN OBJECT FILE" << std::endl;
     return false;
   }
-  std::cout << "OPENED: " << filePath << '\n';
+  std::cout << "OPENED OBJ File: " << filePath << '\n';
 
   constexpr float kVertexOffset = 0.0f;
   constexpr unsigned kIndexOffset = 1;
 
   std::string raw;
+  int lineNum{1};
+
   while (std::getline(file, raw)) {
-    std::string_view line = raw;
+    std::string_view line = normalise(raw, lineNum == 1);
     if (line.empty() || line.front() == '#')
       continue;
 
@@ -190,17 +211,21 @@ bool parseObj(const char* filePath, ObjProp& obj) {
 
       const auto dir = path.parent_path();
       if (!parseMaterial(dir / fileName, obj.material))
-        std::cerr << "MATERIAL parse failed\n Skipping... USING DEFAULT\n";
+        std::cerr << "MATERIAL parse failed\n Skipping... USING DEFAULT"
+                  << std::endl;
+
     } else if (prefix == "o") {
       continue;
     } else if (prefix == "usemtl") {
-      std::cerr << "USEMTL NOT SUPPORTED\n continuing...\n";
+      std::cerr << "USEMTL NOT SUPPORTED\n continuing..." << std::endl;
     } else if (prefix == "s") {
-      std::cerr << "SMOOTHING NOT SUPPORTED\n continuing...\n";
+      std::cerr << "SMOOTHING NOT SUPPORTED\n continuing..." << std::endl;
     } else {
-      std::cerr << "CANNOT RECOGNIZE: " << raw << '\n';
+      std::cerr << "CANNOT RECOGNIZE: " << raw << "on line: " << lineNum << " "
+                << std::endl;
       return false;
     }
+    lineNum += 1;
   }
   return true;
 }
