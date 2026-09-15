@@ -1,230 +1,206 @@
-#include <fstream>
-#include <istream>
-#include <iostream>
-#include <vector>
-#include <string>
-#include <sstream>
+#include <charconv>
 #include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <string_view>
+#include <vector>
 
-#include "class/Mesh.hpp"
 #include "MathUtils.hpp"
+#include "class/Mesh.hpp"
 
-template<typename T, typename U>
-void pushToVector(T x, T y, T z, T offset,std::vector<U> &vec)
-{
-    vec.push_back(x - offset);
-    vec.push_back(y - offset);
-    vec.push_back(z - offset);
+template <typename T, typename U>
+void pushToVector(T x, T y, T z, T offset, std::vector<U>& vec) {
+  vec.push_back(x - offset);
+  vec.push_back(y - offset);
+  vec.push_back(z - offset);
 }
 
-static bool validLine(const std::string &line, const size_t expectedSize, bool indicies = false)
-{
-    std::stringstream ss(line);
-    std::string valid;
-    std::vector<std::string> vec;
-    vec.reserve(expectedSize);
+namespace {
 
-    while (ss >> valid)
-    {
-        vec.push_back(valid);
-    }
+// Split "v 1.0 2.0 3.0" -> {"v", "1.0 2.0 3.0"}.
+std::pair<std::string_view, std::string_view>
+splitFirst(std::string_view line) {
+  const auto sp = line.find_first_of(" \t");
+  if (sp == std::string_view::npos)
+    return {line, {}};
 
-    if (vec.size() == expectedSize)
-        return true;
+  std::string_view rest = line.substr(sp + 1);
+  while (!rest.empty() && (rest.front() == ' ' || rest.front() == '\t'))
+    rest.remove_prefix(1);
+  return {line.substr(0, sp), rest};
+}
 
-
-    if (!indicies && vec.size() == 4)
-        std::cerr << "Invalid line: " << line << '\n';
-
+// Read exactly the values supplied; fails on missing or trailing junk.
+template <typename... Ts> bool parseAll(std::string_view s, Ts&... out) {
+  std::istringstream ss{std::string{s}};
+  if (!((ss >> out) && ...)) // all must succeed
     return false;
+  std::string extra;
+  return !(ss >> extra); // nothing must be left
 }
 
+// "v", "v/vt", "v//vn", "v/vt/vn" -> 1-based position index, 0 on error.
+unsigned faceVertexIndex(std::string_view tok) {
+  const auto slash = tok.find('/');
+  const std::string_view num =
+      (slash == std::string_view::npos) ? tok : tok.substr(0, slash);
 
-static bool parseMaterial(const std::string &fileName, Material &mat)
-{
-    std::ifstream file(fileName);
-    if (!file)
-    {
-        std::cerr << "UNABLE TO OPEN MTL FILE: " << fileName << '\n';
-        return false;
-    }
+  unsigned idx = 0;
+  auto [p, ec] = std::from_chars(num.data(), num.data() + num.size(), idx);
+  return (ec == std::errc{} && p == num.data() + num.size()) ? idx : 0;
+}
 
-    std::cout << "OPENED: " << fileName << '\n';
+// Fan-triangulate any n-gon of 1-based indices into a flat output vector.
+void triangulate(const std::vector<unsigned>& face, unsigned offset,
+                 std::vector<unsigned>& out) {
+  for (std::size_t i = 1; i + 1 < face.size(); ++i) {
+    out.push_back(face[0] - offset);
+    out.push_back(face[i] - offset);
+    out.push_back(face[i + 1] - offset);
+  }
+}
 
-    Material tmpMat;
-    std::string line;
-    int mtlCount{};
+} // namespace
 
-    while (std::getline(file, line))
-    {
-        if (line.empty() || line[0] == '#') continue;
+static bool validLine(const std::string& line, const size_t expectedSize,
+                      bool indicies = false) {
+  std::stringstream ss(line);
+  std::string valid;
+  std::vector<std::string> vec;
+  vec.reserve(expectedSize);
 
+  while (ss >> valid)
+    vec.push_back(valid);
 
-        std::stringstream ss(line);
-        std::string prefix;
-        ss >> prefix;
-
-        float r{}, g{}, b{}; //r is reused for float
-
-
-        if (prefix == "Ns")
-        {
-            if(!validLine(line, 2))
-                return false;
-
-            ss >> r;
-            tmpMat.shininess = r;
-        }
-        else if (prefix == "Ka")
-        {
-            if(!validLine(line, 4))
-                return false;
-
-            ss >> r >> g >> b;
-            tmpMat.ambient = Vec3(r, g, b);
-        }
-        else if (prefix == "Kd")
-        {
-            if(!validLine(line, 4))
-                return false;
-            ss >> r >> g >> b;
-            tmpMat.diffuse = Vec3(r, g, b);
-        }
-        else if (prefix == "Ks")
-        {
-            if(!validLine(line, 4))
-                return false;
-            ss >> r >> g >> b;
-            tmpMat.specular = Vec3(r, g, b);
-        }
-        else if (prefix == "d")
-        {
-            if(!validLine(line, 2))
-                return false;
-            ss >> r;
-            tmpMat.opacity = r;
-        }
-        else if (prefix == "newmtl")
-        {
-            mtlCount += 1;
-        }
-        else if (prefix == "illum")
-        {
-            continue;
-        }
-        else
-        {
-            std::cerr << "CANNOT RECOGNIZE: " << prefix << '\n';
-        }
-    }
-
-    if (mtlCount > 1)
-        std::cerr << "ONLY 1 MATERIAL IS SUPPORTED\n";
-
-    mat = tmpMat;
-
+  if (vec.size() == expectedSize)
     return true;
+
+  if (!indicies && vec.size() == 4)
+    std::cerr << "Invalid line: " << line << '\n';
+
+  return false;
 }
 
-bool parseObj(const char *filePath, ObjProp &obj)
-{
-    std::filesystem::path path(filePath);
+static bool parseMaterial(const std::filesystem::path& fileName,
+                          Material& mat) {
+  std::ifstream file(fileName);
+  if (!file) {
+    std::cerr << "UNABLE TO OPEN MTL FILE: " << fileName << '\n';
+    return false;
+  }
+  std::cout << "OPENED: " << fileName << '\n';
 
-    if (path.extension() != ".obj")
-    {
-        std::cerr << "File is not type .obj\n";
-        return false;
-    }
+  Material tmp;
+  int mtlCount = 0;
+  std::string raw;
 
-    std::ifstream file(filePath);
-    if (!file)
-    {
-        std::cerr << "UNABLE TO OPEN OBJECT FILE\n";
-        return false;
-    }
-
-    std::cout << "OPENED: " << filePath << '\n';
-
-    Material mat; //defaut setting
-    mat.ambient = Vec3(0.0f);
-    mat.diffuse = Vec3(0.8f);
-    mat.specular = Vec3(1.0f);
-    mat.opacity = 1.0f;
-    mat.shininess = 32.0f;
-
-    obj.material = mat;
-
-    std::string line;
-    while (std::getline(file, line))
-    {
-        if (line.empty() || line[0] == '#') continue;
-
-        std::stringstream ss(line);
-        std::string prefix;
-
-        ss >> prefix;
-
-        if (prefix == "v")
-        {
-            if(!validLine(line, 4, true))
-                return false;
-            float x{}, y{}, z{};
-            const float offset{0.0f};
-
-            ss >> x >> y >> z;
-            pushToVector(x, y, z, offset, obj.vertices);
-        }
-        else if (prefix == "f")
-        {
-            unsigned int w{}, x{}, y{}, z{};
-            unsigned int offset{1};
-            bool parsingIndicies = true;
-
-            if(validLine(line, 4, parsingIndicies))
-            {
-                ss >> x >> y >> z;
-                pushToVector(x, y, z, offset, obj.indices);
-            }
-            else if(validLine(line, 5, parsingIndicies))
-            {
-                ss >> x >> y >> z >> w;
-                pushToVector(x, y, z, offset, obj.indices);
-                pushToVector(x, z, w, offset, obj.indices);
-            }
-            else
-                return false;
-        }
-        else if (prefix == "mtllib")
-        {
-            if(!validLine(line, 2))
-                break;
-
-            std::string fileName;
-            ss >> fileName;
-
-            std::string dirPath = path.parent_path();
-            if (!parseMaterial(dirPath + "/" + fileName, obj.material))
-                std::cerr << "MATERIAL parse failed \n Skipping... USING DEFAULT\n";
-        }
-        else if (prefix == "o")
-        {
-            //in future make it to handle multiple obj (voxel project)
-            continue;
-        }
-        else if (prefix == "usemtl") //not supported
-        {
-            std::cerr << "USEMTL NOT SUPPORTED\n continuing...\n";
-        }
-        else if (prefix == "s")
-        {
-            std::cerr << "SMOOTHING NOT SUPPORTED\n continuing...\n";
-        }
-        else
-        {
-            std::cerr << "CANNOT RECOGNIZE: " << line << '\n';
-            return false;
-        }
-    }
+  auto readRgb = [&](const std::string_view rest, Vec3& dst) {
+    float r, g, b;
+    if (!parseAll(rest, r, g, b))
+      return false;
+    dst = Vec3(r, g, b);
     return true;
-}
+  };
 
+  while (std::getline(file, raw)) {
+    std::string_view line = raw;
+    if (line.empty() || line.front() == '#')
+      continue;
+
+    auto [prefix, rest] = splitFirst(line);
+
+    if (prefix == "Ns") {
+      if (!parseAll(rest, tmp.shininess))
+        return false;
+    } else if (prefix == "Ka") {
+      if (!readRgb(rest, tmp.ambient))
+        return false;
+    } else if (prefix == "Kd") {
+      if (!readRgb(rest, tmp.diffuse))
+        return false;
+    } else if (prefix == "Ks") {
+      if (!readRgb(rest, tmp.specular))
+        return false;
+    } else if (prefix == "d") {
+      if (!parseAll(rest, tmp.opacity))
+        return false;
+    } else if (prefix == "newmtl") {
+      ++mtlCount;
+    } else if (prefix == "illum") { /* ignored */
+    } else
+      std::cerr << "CANNOT RECOGNIZE: " << prefix << '\n';
+  }
+
+  if (mtlCount > 1)
+    std::cerr << "ONLY 1 MATERIAL IS SUPPORTED\n";
+
+  mat = tmp;
+  return true;
+}
+bool parseObj(const char* filePath, ObjProp& obj) {
+  std::filesystem::path path(filePath);
+
+  if (path.extension() != ".obj") {
+    std::cerr << "File is not type .obj\n";
+    return false;
+  }
+
+  std::ifstream file(filePath);
+  if (!file) {
+    std::cerr << "UNABLE TO OPEN OBJECT FILE\n";
+    return false;
+  }
+  std::cout << "OPENED: " << filePath << '\n';
+
+  constexpr float kVertexOffset = 0.0f;
+  constexpr unsigned kIndexOffset = 1;
+
+  std::string raw;
+  while (std::getline(file, raw)) {
+    std::string_view line = raw;
+    if (line.empty() || line.front() == '#')
+      continue;
+
+    auto [prefix, rest] = splitFirst(line);
+
+    if (prefix == "v") {
+      float x, y, z;
+      if (!parseAll(rest, x, y, z))
+        return false;
+      pushToVector(x, y, z, kVertexOffset, obj.vertices);
+    } else if (prefix == "f") {
+      std::vector<unsigned> face;
+      std::istringstream ss{std::string{rest}};
+      std::string tok;
+      while (ss >> tok) {
+        const unsigned idx = faceVertexIndex(tok);
+        if (idx == 0)
+          return false;
+        face.push_back(idx);
+      }
+      if (face.size() < 3)
+        return false;
+      triangulate(face, kIndexOffset, obj.indices);
+    } else if (prefix == "mtllib") {
+      std::string fileName;
+      if (!parseAll(rest, fileName))
+        break;
+
+      const auto dir = path.parent_path();
+      if (!parseMaterial(dir / fileName, obj.material))
+        std::cerr << "MATERIAL parse failed\n Skipping... USING DEFAULT\n";
+    } else if (prefix == "o") {
+      continue;
+    } else if (prefix == "usemtl") {
+      std::cerr << "USEMTL NOT SUPPORTED\n continuing...\n";
+    } else if (prefix == "s") {
+      std::cerr << "SMOOTHING NOT SUPPORTED\n continuing...\n";
+    } else {
+      std::cerr << "CANNOT RECOGNIZE: " << raw << '\n';
+      return false;
+    }
+  }
+  return true;
+}

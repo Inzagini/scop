@@ -40,6 +40,5 @@
 *.dwo
 
 scop
-src/*.o
 obj
 build/
