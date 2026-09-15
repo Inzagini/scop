@@ -60,6 +60,7 @@ void GameObject::mouseHandler(GLFWwindow* window, float& dTime) {
 void GameObject::movementHandler(GLFWwindow* window, float& dTime) {
   float speed = 2.0f;
 
+  // Move Game object
   if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
     transform.setPositionY(transform.getPositionY() + speed * dTime);
   }
@@ -75,6 +76,8 @@ void GameObject::movementHandler(GLFWwindow* window, float& dTime) {
   if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
     centerObj();
   }
+
+  // Rotation Game object
   if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
     transform.setRotationY(transform.getRotationY() - speed * dTime * 30);
   }
@@ -82,5 +85,18 @@ void GameObject::movementHandler(GLFWwindow* window, float& dTime) {
     transform.setRotationY(transform.getRotationY() + speed * dTime * 30);
   }
 
+  if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+    transform.setRotationX(transform.getRotationX() - speed * dTime * 30);
+  }
+  if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+    transform.setRotationX(transform.getRotationX() + speed * dTime * 30);
+  }
+
+  if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+    transform.setRotationZ(transform.getRotationZ() - speed * dTime * 30);
+  }
+  if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+    transform.setRotationZ(transform.getRotationZ() + speed * dTime * 30);
+  }
   mouseHandler(window, dTime);
 }
