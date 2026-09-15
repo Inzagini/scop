@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <charconv>
 #include <filesystem>
 #include <fstream>
@@ -10,14 +11,15 @@
 #include "MathUtils.hpp"
 #include "class/Mesh.hpp"
 
+namespace {
+
+// push to obj vertex
 template <typename T, typename U>
 void pushToVector(T x, T y, T z, T offset, std::vector<U>& vec) {
   vec.push_back(x - offset);
   vec.push_back(y - offset);
   vec.push_back(z - offset);
 }
-
-namespace {
 
 // Strip UTF-8 BOM, leading whitespace, and trailing CR/whitespace.
 std::string_view normalise(std::string_view s, bool firstLine) {
@@ -78,6 +80,40 @@ void triangulate(const std::vector<unsigned>& face, unsigned offset,
   }
 }
 
+void recenter(std::vector<float>& verts, bool normaliseSize = false) {
+  if (verts.empty())
+    return;
+
+  float minX = verts[0], minY = verts[1], minZ = verts[2];
+  float maxX = minX, maxY = minY, maxZ = minZ;
+
+  for (std::size_t i = 0; i + 2 < verts.size(); i += 3) {
+    minX = std::min(minX, verts[i]);
+    maxX = std::max(maxX, verts[i]);
+    minY = std::min(minY, verts[i + 1]);
+    maxY = std::max(maxY, verts[i + 1]);
+    minZ = std::min(minZ, verts[i + 2]);
+    maxZ = std::max(maxZ, verts[i + 2]);
+  }
+
+  const float cx = 0.5f * (minX + maxX);
+  const float cy = 0.5f * (minY + maxY);
+  const float cz = 0.5f * (minZ + maxZ);
+
+  float scale = 1.0f;
+  if (normaliseSize) {
+    const float ex = maxX - minX, ey = maxY - minY, ez = maxZ - minZ;
+    const float longest = std::max({ex, ey, ez});
+    if (longest > 0.0f)
+      scale = 1.0f / longest;
+  }
+
+  for (std::size_t i = 0; i + 2 < verts.size(); i += 3) {
+    verts[i] = (verts[i] - cx) * scale;
+    verts[i + 1] = (verts[i + 1] - cy) * scale;
+    verts[i + 2] = (verts[i + 2] - cz) * scale;
+  }
+}
 } // namespace
 
 static bool validLine(const std::string& line, const size_t expectedSize,
@@ -227,5 +263,7 @@ bool parseObj(const char* filePath, ObjProp& obj) {
     }
     lineNum += 1;
   }
+  recenter(obj.vertices);
+
   return true;
 }
