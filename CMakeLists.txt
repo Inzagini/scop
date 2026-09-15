@@ -22,6 +22,10 @@ set(SOURCES
 
 add_executable(scop ${SOURCES})
 
+if(APPLE)
+    target_compile_definitions(scop PRIVATE GL_SILENCE_DEPRECATION)
+endif()
+
 target_include_directories(scop PRIVATE
     .
     inc
