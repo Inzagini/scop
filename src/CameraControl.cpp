@@ -2,80 +2,73 @@
 
 #include <iostream>
 
-void CameraControl::init(GLFWwindow *window, Camera *camera)
-{
-    this->window = window;
-    this->camera = camera;
+void CameraControl::init(GLFWwindow* window, Camera* camera) {
+  this->window = window;
+  this->camera = camera;
 }
 
-void CameraControl::movementHandler()
-{
-    mouseHandler();
+void CameraControl::movementHandler() { mouseHandler(); }
+
+void CameraControl::mouseHandler() {
+  // handling the scrollwheel
+  glfwSetScrollCallback(window, scrollCallback);
+
+  // handling the scrollwheel click drag
+  glfwSetMouseButtonCallback(window, mouseButtonCallback);
+  glfwSetCursorPosCallback(window, scrollDragCallback);
 }
 
-void CameraControl::mouseHandler()
-{
-    //handling the scrollwheel
-    glfwSetScrollCallback(window, scrollCallback);
+void CameraControl::onScroll(double dx, double dy) {
+  dx = dx; // not used
+  Vec3 offset = camera->getPosition() - target;
+  constexpr float zoomSpeed = 0.3f;
+  float distance = MathUtils::length(offset);
 
-    //handling the scrollwheel click drag
-    glfwSetMouseButtonCallback(window, mouseButtonCallback);
-    glfwSetCursorPosCallback(window, scrollDragCallback);
+  float newDistance = distance - float(dy) * zoomSpeed;
+
+  newDistance = newDistance < maxZoomIn ? maxZoomIn : newDistance;
+  newDistance = newDistance > maxZoomOut ? maxZoomOut : newDistance;
+
+  offset = MathUtils::normalize(offset) * newDistance;
+  camera->setRadius(MathUtils::length(offset));
+  camera->move(target + offset);
 }
 
-void CameraControl::onScroll(double dx, double dy)
-{
-    dx = dx; //not used
-    Vec3 offset = camera->getPosition() - target;
-    constexpr float zoomSpeed = 0.3f;
-    float distance = MathUtils::length(offset);
+void CameraControl::onDrag(double xPos, double yPos) {
+  float dx = xPos - lastMouseX;
+  float dy = yPos - lastMouseY;
 
-    float newDistance = distance - float(dy) * zoomSpeed;
+  lastMouseX = xPos;
+  lastMouseY = yPos;
 
-    if (newDistance < 0.1f) newDistance = 0.1f;
-    if (newDistance > 10.0f) newDistance = 10.0f;
+  constexpr float sensitivity = 0.1f;
+  dx *= sensitivity;
+  dy *= sensitivity;
 
-    offset = MathUtils::normalize(offset) * newDistance;
-    camera->setRadius(MathUtils::length(offset));
-    camera->move(target + offset);
+  float newYaw = camera->getYaw() + dx;
+  float newPitch = camera->getPitch() + dy;
+
+  newPitch = newPitch > 89.0f ? 89.0f : newPitch;
+  newPitch = newPitch < -89.0f ? -89.0f : newPitch;
+
+  camera->setYaw(newYaw);
+  camera->setPitch(newPitch);
+
+  Vec3 direction;
+  direction.x = camera->getRadius() * cos(MathUtils::radians(newYaw)) *
+                cos(MathUtils::radians(newPitch));
+  direction.y = camera->getRadius() * sin(MathUtils::radians(newPitch));
+  direction.z = camera->getRadius() * sin(MathUtils::radians(newYaw)) *
+                cos(MathUtils::radians(newPitch));
+
+  camera->move(target + direction);
 }
 
-void CameraControl::onDrag(double xPos, double yPos)
-{
-    float dx = xPos - lastMouseX;
-    float dy = yPos - lastMouseY;
-
-    lastMouseX = xPos;
-    lastMouseY = yPos;
-
-    constexpr float sensitivity = 0.1f;
-    dx *= sensitivity;
-    dy *= sensitivity;
-
-    float newYaw = camera->getYaw() + dx;
-    float newPitch = camera->getPitch() + dy;
-
-    newPitch = newPitch > 89.0f ? 89.0f : newPitch;
-    newPitch = newPitch < -89.0f ? -89.0f : newPitch;
-
-    camera->setYaw(newYaw);
-    camera->setPitch(newPitch);
-
-    Vec3 direction;
-    direction.x = camera->getRadius() * cos(MathUtils::radians(newYaw)) * cos(MathUtils::radians(newPitch));
-    direction.y = camera->getRadius() * sin(MathUtils::radians(newPitch));
-    direction.z = camera->getRadius() * sin(MathUtils::radians(newYaw)) * cos(MathUtils::radians(newPitch));
-
-    camera->move(target + direction);
+void CameraControl::onMiddleButtonPress(bool state) {
+  middleMousePressed = state;
+  glfwGetCursorPos(window, &lastMouseX, &lastMouseY);
 }
 
-void CameraControl::onMiddleButtonPress(bool state)
-{
-    middleMousePressed = state;
-    glfwGetCursorPos(window, &lastMouseX, &lastMouseY);
-}
-
-bool CameraControl::getMiddleButtonPressState() const
-{
-    return middleMousePressed;
+bool CameraControl::getMiddleButtonPressState() const {
+  return middleMousePressed;
 }

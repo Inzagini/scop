@@ -30,6 +30,33 @@ void GameObject::centerObj() {
   transform.setPositionZ(0);
 }
 
+void GameObject::mouseHandler(GLFWwindow* window, float& dTime) {
+
+  double mx, my;
+  glfwGetCursorPos(window, &mx, &my);
+
+  bool leftDown =
+      glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
+
+  if (leftDown && !mouseDragging) {
+    mouseDragging = true;
+    lastMouseX = static_cast<float>(mx);
+    lastMouseY = static_cast<float>(my);
+  } else if (!leftDown) {
+    mouseDragging = false;
+  } else {
+    float dx = static_cast<float>(mx) - lastMouseX;
+    float dy = static_cast<float>(my) - lastMouseY;
+    lastMouseX = static_cast<float>(mx);
+    lastMouseY = static_cast<float>(my);
+
+    const float sensitivity = 0.3f;
+
+    transform.setRotationY(transform.getRotationY() + dx * sensitivity);
+    transform.setRotationX(transform.getRotationX() + dy * sensitivity);
+  }
+}
+
 void GameObject::movementHandler(GLFWwindow* window, float& dTime) {
   float speed = 2.0f;
 
@@ -54,4 +81,6 @@ void GameObject::movementHandler(GLFWwindow* window, float& dTime) {
   if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
     transform.setRotationY(transform.getRotationY() + speed * dTime * 30);
   }
+
+  mouseHandler(window, dTime);
 }

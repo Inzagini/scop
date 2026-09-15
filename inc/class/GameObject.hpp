@@ -15,8 +15,13 @@ public:
 private:
   void movementHandler(GLFWwindow* window, float& dTime);
   void centerObj();
+  void mouseHandler(GLFWwindow* window, float& dTime);
 
 private:
   Mesh* mesh;
   Transform transform;
+
+  bool mouseDragging = false;
+  float lastMouseX = 0.0f;
+  float lastMouseY = 0.0f;
 };

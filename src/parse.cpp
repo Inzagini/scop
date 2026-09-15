@@ -227,6 +227,12 @@ bool parseObj(const char* filePath, ObjProp& obj) {
       if (!parseAll(rest, x, y, z))
         return false;
       pushToVector(x, y, z, kVertexOffset, obj.vertices);
+    } else if (prefix == "vn") {
+      continue;
+    } else if (prefix == "vt") {
+      continue;
+    } else if (prefix == "g") {
+      continue;
     } else if (prefix == "f") {
       std::vector<unsigned> face;
       std::istringstream ss{std::string{rest}};
