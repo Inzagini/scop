@@ -5,6 +5,7 @@
 void CameraControl::init(GLFWwindow* window, Camera* camera) {
   this->window = window;
   this->camera = camera;
+  maxZoomOut = camera->getRadius() * 4.0f; // zoom-out headroom past the fitted distance
 }
 
 void CameraControl::movementHandler() { mouseHandler(); }

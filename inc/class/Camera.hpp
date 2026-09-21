@@ -24,6 +24,8 @@ class Camera
         float   getRadius() {return radius;}
         void    setRadius(float n) {radius = n;}
 
+        void    setFarPlane(float n) {farPlane = n;}
+
     private:
         Vec3            position {0.0f, 1.0f, 3.0f};
         const Vec3      target {0, 0, 0};
@@ -31,7 +33,7 @@ class Camera
         const float     fov{45.0f};
         const float     aspectRatio = static_cast<float>(SCR_WIDTH) / SCR_HEIGHT;
         const float     nearPlane{0.1f};
-        const float     farPlane{100.0f};
+        float           farPlane{100.0f};
         float           radius = MathUtils::length(position - target); //distance camera from target
         float           yaw = MathUtils::degrees(atan2((position - target).z, (position - target).x));
         float           pitch = MathUtils::degrees(asin((position - target).y / radius));

@@ -255,12 +255,12 @@ bool parseObj(const char* filePath, ObjProp& obj) {
     const int rv = resolve(vIdx, static_cast<std::size_t>(nv));
     if (rv < 0)
       return 0; // sentinel; caller checks later if you want
-    int rvt = resolve(vtIdx, static_cast<std::size_t>(nvt));
-    if (rvt < 0)
-      rvt = 0; // "no texcoord" is stored as 0
+    const int rvt =
+        (vtIdx == 0) ? -1 : resolve(vtIdx, static_cast<std::size_t>(nvt));
 
-    const std::uint64_t key = (static_cast<std::uint64_t>(rv) << 32) |
-                              static_cast<std::uint32_t>(rvt);
+    const std::uint64_t key =
+        (static_cast<std::uint64_t>(rv) << 32) |
+        (rvt < 0 ? 0xFFFFFFFFu : static_cast<std::uint32_t>(rvt));
     auto it = vertexMap.find(key);
     if (it != vertexMap.end())
       return it->second;
@@ -272,9 +272,10 @@ bool parseObj(const char* filePath, ObjProp& obj) {
     obj.vertices.push_back(rawPos[pi + 1]);
     obj.vertices.push_back(rawPos[pi + 2]);
 
-    if (rvt > 0 && 2 * static_cast<std::size_t>(rvt) <= rawUV.size()) {
-      obj.texCoords.push_back(rawUV[2 * (rvt - 1)]);
-      obj.texCoords.push_back(rawUV[2 * (rvt - 1) + 1]);
+    if (rvt >= 0 &&
+        2 * static_cast<std::size_t>(rvt) + 1 < rawUV.size()) {
+      obj.texCoords.push_back(rawUV[2 * static_cast<std::size_t>(rvt)]);
+      obj.texCoords.push_back(rawUV[2 * static_cast<std::size_t>(rvt) + 1]);
     } else {
       obj.texCoords.push_back(0.0f);
       obj.texCoords.push_back(0.0f);

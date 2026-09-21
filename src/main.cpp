@@ -51,6 +51,24 @@ int main(int arc, char* argv[]) {
   Mesh mesh1(objProp, 3, GL_STATIC_DRAW);
   GameObject gameObj(mesh1);
 
+  // Fit initial camera distance to the object's bounding sphere.
+  float boundRadius = 0.0f;
+  for (std::size_t i = 0; i + 2 < objProp.vertices.size(); i += 3) {
+    const float len = MathUtils::length(
+        Vec3(objProp.vertices[i], objProp.vertices[i + 1],
+             objProp.vertices[i + 2]));
+    if (len > boundRadius)
+      boundRadius = len;
+  }
+
+  constexpr float margin = 1.25f; // breathing room around the object (~80% of screen)
+  const float halfFov = MathUtils::radians(45.0f / 2.0f);
+  const float dist = boundRadius / std::tan(halfFov) * margin;
+
+  camera.setRadius(dist);
+  camera.move(MathUtils::normalize(camera.getPosition()) * dist);
+  camera.setFarPlane(dist * 5.0f); // keep the fitted object inside the frustum
+
   CameraControl& cameraControler = CameraControl::getInstance();
   cameraControler.init(window.get(), &camera);
   glfwSetWindowUserPointer(window.get(), &cameraControler);
