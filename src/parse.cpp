@@ -362,5 +362,29 @@ bool parseObj(const char* filePath, ObjProp& obj) {
 
   recenter(obj.vertices);
 
+  // Smooth (per-vertex) normals; works whether or not the OBJ has vn.
+  obj.normals.assign(obj.vertices.size(), 0.0f);
+  for (std::size_t i = 0; i + 2 < obj.indices.size(); i += 3) {
+    const unsigned a = obj.indices[i], b = obj.indices[i + 1],
+                   c = obj.indices[i + 2];
+    auto P = [&](unsigned v) {
+      return Vec3(obj.vertices[3 * v], obj.vertices[3 * v + 1],
+                  obj.vertices[3 * v + 2]);
+    };
+    const Vec3 n = MathUtils::cross(P(b) - P(a), P(c) - P(a));
+    for (unsigned v : {a, b, c}) {
+      obj.normals[3 * v] += n.x;
+      obj.normals[3 * v + 1] += n.y;
+      obj.normals[3 * v + 2] += n.z;
+    }
+  }
+  for (std::size_t v = 0; v + 2 < obj.normals.size(); v += 3) {
+    const Vec3 n = MathUtils::normalize(
+        Vec3(obj.normals[v], obj.normals[v + 1], obj.normals[v + 2]));
+    obj.normals[v] = n.x;
+    obj.normals[v + 1] = n.y;
+    obj.normals[v + 2] = n.z;
+  }
+
   return true;
 }

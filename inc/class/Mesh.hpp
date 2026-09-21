@@ -21,6 +21,7 @@ struct ObjProp {
   Material material;
   std::vector<float> vertices;
   std::vector<float> texCoords;
+  std::vector<float> normals;
   std::vector<unsigned int> indices;
   int size;
 };
@@ -40,6 +41,6 @@ private:
   size_t indexCount{};
   size_t vertexCount{};
   const float opacity{1};
-  unsigned int VBO{}, uvVBO{}, VAO{}, EBO{};
+  unsigned int VBO{}, normalVBO{}, uvVBO{}, VAO{}, EBO{};
   unsigned int texture{};
 };

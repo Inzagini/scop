@@ -38,6 +38,14 @@ Mesh::Mesh(const ObjProp& obj, const unsigned int& size,
     glEnableVertexAttribArray(2);
   }
 
+  // --- normals (location 1) ---
+  glGenBuffers(1, &normalVBO);
+  glBindBuffer(GL_ARRAY_BUFFER, normalVBO);
+  glBufferData(GL_ARRAY_BUFFER, obj.normals.size() * sizeof(float),
+               obj.normals.data(), GL_STATIC_DRAW);
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+  glEnableVertexAttribArray(1);
+
   glBindVertexArray(0);
 
   // --- texture ---
@@ -55,6 +63,7 @@ Mesh::~Mesh() {
   glDeleteBuffers(1, &VBO);
   glDeleteBuffers(1, &EBO);
   glDeleteBuffers(1, &uvVBO);
+  glDeleteBuffers(1, &normalVBO);
   if (texture)
     glDeleteTextures(1, &texture);
 }
