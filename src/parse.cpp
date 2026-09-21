@@ -1,11 +1,13 @@
 #include <algorithm>
 #include <charconv>
+#include <cstdint>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <string_view>
+#include <unordered_map>
 #include <vector>
 
 #include "MathUtils.hpp"
@@ -59,24 +61,46 @@ template <typename... Ts> bool parseAll(std::string_view s, Ts&... out) {
   return !(ss >> extra); // nothing must be left
 }
 
-// "v", "v/vt", "v//vn", "v/vt/vn" -> 1-based position index, 0 on error.
-unsigned faceVertexIndex(std::string_view tok) {
-  const auto slash = tok.find('/');
-  const std::string_view num =
-      (slash == std::string_view::npos) ? tok : tok.substr(0, slash);
-
-  unsigned idx = 0;
-  auto [p, ec] = std::from_chars(num.data(), num.data() + num.size(), idx);
-  return (ec == std::errc{} && p == num.data() + num.size()) ? idx : 0;
+// Read the first N values; trailing junk is allowed.
+template <typename... Ts> bool parsePrefix(std::string_view s, Ts&... out) {
+  std::istringstream ss{std::string{s}};
+  return ((ss >> out) && ...);
 }
 
-// Fan-triangulate any n-gon of 1-based indices into a flat output vector.
-void triangulate(const std::vector<unsigned>& face, unsigned offset,
+bool parseInt(std::string_view s, int& out) {
+  if (s.empty())
+    return false;
+  auto [p, ec] = std::from_chars(s.data(), s.data() + s.size(), out);
+  return ec == std::errc{} && p == s.data() + s.size();
+}
+
+// "v", "v/vt", "v//vn", "v/vt/vn" -> v (signed, 1-based; negative = relative)
+// and vt (same convention, 0 = none).
+bool parseFaceRef(std::string_view tok, int& vOut, int& vtOut) {
+  const auto s1 = tok.find('/');
+  vtOut = 0;
+
+  if (!parseInt(s1 == std::string_view::npos ? tok : tok.substr(0, s1), vOut))
+    return false;
+
+  if (s1 != std::string_view::npos) {
+    const auto s2 = tok.find('/', s1 + 1);
+    const std::string_view vt = (s2 == std::string_view::npos)
+                                    ? tok.substr(s1 + 1)
+                                    : tok.substr(s1 + 1, s2 - s1 - 1);
+    if (!vt.empty() && !parseInt(vt, vtOut))
+      return false; // present but malformed
+  }
+  return true;
+}
+
+// Fan-triangulate any n-gon of 0-based indices into a flat output vector.
+void triangulate(const std::vector<unsigned>& face,
                  std::vector<unsigned>& out) {
   for (std::size_t i = 1; i + 1 < face.size(); ++i) {
-    out.push_back(face[0] - offset);
-    out.push_back(face[i] - offset);
-    out.push_back(face[i + 1] - offset);
+    out.push_back(face[0]);
+    out.push_back(face[i]);
+    out.push_back(face[i + 1]);
   }
 }
 
@@ -116,25 +140,6 @@ void recenter(std::vector<float>& verts, bool normaliseSize = false) {
 }
 } // namespace
 
-static bool validLine(const std::string& line, const size_t expectedSize,
-                      bool indicies = false) {
-  std::stringstream ss(line);
-  std::string valid;
-  std::vector<std::string> vec;
-  vec.reserve(expectedSize);
-
-  while (ss >> valid)
-    vec.push_back(valid);
-
-  if (vec.size() == expectedSize)
-    return true;
-
-  if (!indicies && vec.size() == 4)
-    std::cerr << "Invalid line: " << line << std::endl;
-
-  return false;
-}
-
 static bool parseMaterial(const std::filesystem::path& fileName,
                           Material& mat) {
   std::ifstream file(fileName);
@@ -156,9 +161,10 @@ static bool parseMaterial(const std::filesystem::path& fileName,
     return true;
   };
 
-  int lineNum{1};
-
+  int lineNum{};
   while (std::getline(file, raw)) {
+
+    lineNum += 1;
     std::string_view line = normalise(raw, lineNum == 1);
     if (line.empty() || line.front() == '#')
       continue;
@@ -181,11 +187,24 @@ static bool parseMaterial(const std::filesystem::path& fileName,
         return false;
     } else if (prefix == "newmtl") {
       ++mtlCount;
-    } else if (prefix == "illum") { /* ignored */
+    } else if (prefix == "illum" || prefix == "Ni" || prefix == "Tr" ||
+               prefix == "Tf" || prefix == "Ke" || prefix == "map_Ka" ||
+               prefix == "map_Ks" || prefix == "map_Ns" || prefix == "map_d" ||
+               prefix == "map_bump" || prefix == "bump") { /* ignored */
+      continue;
+    } else if (prefix == "map_Kd") {
+
+      std::cerr << "[Mtl] got map_Kd, rest = '" << rest << "'\n";
+      const auto sp = rest.find_last_of(" \t");
+      const std::string_view file =
+          (sp == std::string_view::npos) ? rest : rest.substr(sp + 1);
+      if (file.empty())
+        return false;
+      tmp.diffuseMap = (fileName.parent_path() / file).string();
+      std::cerr << "[Mtl] diffuseMap -> '" << tmp.diffuseMap << "'\n";
     } else
-      std::cerr << "CANNOT RECOGNIZE: " << prefix << "on line: " << lineNum
-                << "." << std::endl;
-    lineNum += 1;
+      std::cerr << "Line: " << lineNum << " CANNOT RECOGNIZE: " << prefix
+                << std::endl;
   }
 
   if (mtlCount > 1)
@@ -194,6 +213,7 @@ static bool parseMaterial(const std::filesystem::path& fileName,
   mat = tmp;
   return true;
 }
+
 bool parseObj(const char* filePath, ObjProp& obj) {
   std::filesystem::path path(filePath);
 
@@ -210,12 +230,66 @@ bool parseObj(const char* filePath, ObjProp& obj) {
   std::cout << "OPENED OBJ File: " << filePath << '\n';
 
   constexpr float kVertexOffset = 0.0f;
-  constexpr unsigned kIndexOffset = 1;
+
+  std::vector<float> rawPos; // all 'v' lines, flat xyz
+  std::vector<float> rawUV;  // all 'vt' lines, flat uv
+
+  std::unordered_map<std::uint64_t, unsigned> vertexMap;
+
+  // Resolve a 1-based (or negative = relative) OBJ index into a 0-based
+  // index into the raw array. Returns -1 if out of range.
+  auto resolve = [](int idx, std::size_t count) -> int {
+    if (idx > 0)
+      return (static_cast<std::size_t>(idx) <= count) ? idx - 1 : -1;
+    if (idx < 0)
+      return (static_cast<std::size_t>(-idx) <= count)
+                 ? static_cast<int>(count) + idx
+                 : -1;
+    return -1;
+  };
+
+  auto getVertex = [&](int vIdx, int vtIdx) -> unsigned {
+    const int nv = static_cast<int>(rawPos.size() / 3);
+    const int nvt = static_cast<int>(rawUV.size() / 2);
+
+    const int rv = resolve(vIdx, static_cast<std::size_t>(nv));
+    if (rv < 0)
+      return 0; // sentinel; caller checks later if you want
+    int rvt = resolve(vtIdx, static_cast<std::size_t>(nvt));
+    if (rvt < 0)
+      rvt = 0; // "no texcoord" is stored as 0
+
+    const std::uint64_t key = (static_cast<std::uint64_t>(rv) << 32) |
+                              static_cast<std::uint32_t>(rvt);
+    auto it = vertexMap.find(key);
+    if (it != vertexMap.end())
+      return it->second;
+
+    const unsigned newIdx = static_cast<unsigned>(obj.vertices.size() / 3);
+
+    const std::size_t pi = 3 * static_cast<std::size_t>(rv);
+    obj.vertices.push_back(rawPos[pi]);
+    obj.vertices.push_back(rawPos[pi + 1]);
+    obj.vertices.push_back(rawPos[pi + 2]);
+
+    if (rvt > 0 && 2 * static_cast<std::size_t>(rvt) <= rawUV.size()) {
+      obj.texCoords.push_back(rawUV[2 * (rvt - 1)]);
+      obj.texCoords.push_back(rawUV[2 * (rvt - 1) + 1]);
+    } else {
+      obj.texCoords.push_back(0.0f);
+      obj.texCoords.push_back(0.0f);
+    }
+
+    vertexMap[key] = newIdx;
+    return newIdx;
+  };
 
   std::string raw;
-  int lineNum{1};
+  int lineNum{};
 
   while (std::getline(file, raw)) {
+
+    lineNum += 1;
     std::string_view line = normalise(raw, lineNum == 1);
     if (line.empty() || line.front() == '#')
       continue;
@@ -224,28 +298,41 @@ bool parseObj(const char* filePath, ObjProp& obj) {
 
     if (prefix == "v") {
       float x, y, z;
-      if (!parseAll(rest, x, y, z))
+      // Some exporters append an optional 'w' weight; ignore it.
+      if (!parsePrefix(rest, x, y, z))
         return false;
-      pushToVector(x, y, z, kVertexOffset, obj.vertices);
+      rawPos.push_back(x);
+      rawPos.push_back(y);
+      rawPos.push_back(z);
+
     } else if (prefix == "vn") {
       continue;
+
     } else if (prefix == "vt") {
-      continue;
+      float u, v;
+      // Some exporters append an optional 'w' depth; ignore it.
+      if (!parsePrefix(rest, u, v))
+        return false;
+      rawUV.push_back(u);
+      rawUV.push_back(v);
+
     } else if (prefix == "g") {
       continue;
+
     } else if (prefix == "f") {
       std::vector<unsigned> face;
       std::istringstream ss{std::string{rest}};
       std::string tok;
       while (ss >> tok) {
-        const unsigned idx = faceVertexIndex(tok);
-        if (idx == 0)
+        int v, vt;
+        if (!parseFaceRef(tok, v, vt))
           return false;
-        face.push_back(idx);
+        face.push_back(getVertex(v, vt));
       }
       if (face.size() < 3)
         return false;
-      triangulate(face, kIndexOffset, obj.indices);
+      triangulate(face, obj.indices);
+
     } else if (prefix == "mtllib") {
       std::string fileName;
       if (!parseAll(rest, fileName))
@@ -255,20 +342,24 @@ bool parseObj(const char* filePath, ObjProp& obj) {
       if (!parseMaterial(dir / fileName, obj.material))
         std::cerr << "MATERIAL parse failed\n Skipping... USING DEFAULT"
                   << std::endl;
-
+      std::cerr << "[Obj] mtllib file: " << fileName << '\n';
     } else if (prefix == "o") {
       continue;
+
     } else if (prefix == "usemtl") {
-      std::cerr << "USEMTL NOT SUPPORTED\n continuing..." << std::endl;
+      // Single-material loader: the one material from mtllib is used.
+      continue;
+
     } else if (prefix == "s") {
       std::cerr << "SMOOTHING NOT SUPPORTED\n continuing..." << std::endl;
+
     } else {
-      std::cerr << "CANNOT RECOGNIZE: " << raw << "on line: " << lineNum << " "
+      std::cerr << "Line: " << lineNum << " CANNOT RECOGNIZE: " << raw
                 << std::endl;
       return false;
     }
-    lineNum += 1;
   }
+
   recenter(obj.vertices);
 
   return true;

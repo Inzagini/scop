@@ -3,6 +3,7 @@
 #include "MathUtils.hpp"
 #include "glad/glad.h"
 #include <GLFW/glfw3.h>
+#include <string>
 #include <vector>
 
 struct Material {
@@ -13,11 +14,13 @@ struct Material {
   float shininess = 32.0f;
 
   Material() = default;
+  std::string diffuseMap;
 };
 
 struct ObjProp {
   Material material;
   std::vector<float> vertices;
+  std::vector<float> texCoords;
   std::vector<unsigned int> indices;
   int size;
 };
@@ -30,10 +33,13 @@ public:
   ~Mesh();
   void draw();
   float getOpacity() const;
+  bool hasTexture() const;
+  unsigned int getTexture() const;
 
 private:
   size_t indexCount{};
   size_t vertexCount{};
   const float opacity{1};
-  unsigned int VBO{}, VAO{}, EBO{};
+  unsigned int VBO{}, uvVBO{}, VAO{}, EBO{};
+  unsigned int texture{};
 };

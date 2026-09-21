@@ -1,57 +1,76 @@
 #include "class/Mesh.hpp"
+#include "Texture.hpp"
 
-#include <iostream>
+Mesh::Mesh(const ObjProp& obj, const unsigned int& size,
+           const unsigned int drawType)
+    : opacity(obj.material.opacity) {
+  indexCount = obj.indices.size();
+  vertexCount = obj.vertices.size() / 3; // 3 floats per vertex
 
-Mesh::Mesh(const ObjProp &obj, const unsigned int &size, const unsigned int drawType) : opacity(obj.material.opacity)
-{
-    indexCount = obj.indices.size();
-    vertexCount = obj.vertices.size() / 3;
+  glGenVertexArrays(1, &VAO);
+  glBindVertexArray(VAO);
 
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
+  // --- position (location 0) ---
+  glGenBuffers(1, &VBO);
+  glBindBuffer(GL_ARRAY_BUFFER, VBO);
+  glBufferData(GL_ARRAY_BUFFER, obj.vertices.size() * sizeof(float),
+               obj.vertices.data(), GL_STATIC_DRAW);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+  glEnableVertexAttribArray(0);
 
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, obj.vertices.size() * sizeof(float), obj.vertices.data(), GL_STATIC_DRAW);
+  // --- indices ---
+  if (!obj.indices.empty()) {
+    glGenBuffers(1, &EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                 obj.indices.size() * sizeof(unsigned int), obj.indices.data(),
+                 drawType);
+  }
 
-    if (!obj.indices.empty())
-    {
-        glGenBuffers(1, &EBO);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, obj.indices.size() * sizeof(unsigned int), obj.indices.data(), drawType);
-    }
+  // --- UV (location 2) ---
+  if (!obj.texCoords.empty()) {
+    glGenBuffers(1, &uvVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, uvVBO); // bind *just before* its attrib
+    glBufferData(GL_ARRAY_BUFFER, obj.texCoords.size() * sizeof(float),
+                 obj.texCoords.data(), GL_STATIC_DRAW);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float),
+                          (void*)0);
+    glEnableVertexAttribArray(2);
+  }
 
-    //position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, size * sizeof(float), reinterpret_cast<void *>(0));
-    glEnableVertexAttribArray(0);
+  glBindVertexArray(0);
 
-    //color attribute
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, size * sizeof(float), reinterpret_cast<void *>(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-
-    // glBindVertexArray(0);
-
+  // --- texture ---
+  if (!obj.material.diffuseMap.empty()) {
+    std::cerr << "[Mesh] about to load: '" << obj.material.diffuseMap << "'\n";
+    texture = loadTexture2D(obj.material.diffuseMap);
+    std::cerr << "[Mesh] texture id = " << texture << '\n';
+  } else {
+    std::cerr << "[Mesh] diffuseMap is EMPTY, skipping texture load\n";
+  }
 }
 
-Mesh::~Mesh()
-{
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-    if (EBO) glDeleteBuffers(1, &EBO);
+Mesh::~Mesh() {
+  glDeleteVertexArrays(1, &VAO);
+  glDeleteBuffers(1, &VBO);
+  glDeleteBuffers(1, &EBO);
+  glDeleteBuffers(1, &uvVBO);
+  if (texture)
+    glDeleteTextures(1, &texture);
 }
 
-void Mesh::draw()
-{
-    glBindVertexArray(VAO);
-    if (indexCount)
-        glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
-    else
-        glDrawArrays(GL_TRIANGLES, 0, vertexCount);
+void Mesh::draw() {
+  glBindVertexArray(VAO);
+  if (indexCount)
+    glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
+  else
+    glDrawArrays(GL_TRIANGLES, 0, vertexCount);
 
-    glBindVertexArray(0);
+  glBindVertexArray(0);
 }
 
-float Mesh::getOpacity() const
-{
-    return opacity;
-}
+float Mesh::getOpacity() const { return opacity; }
+
+bool Mesh::hasTexture() const { return texture != 0; }
+
+unsigned int Mesh::getTexture() const { return texture; }

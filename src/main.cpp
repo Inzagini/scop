@@ -72,7 +72,13 @@ int main(int arc, char* argv[]) {
     shader.setLight();
     shader.inputHandler(window.get());
     {
+      shader.setBool("hasTexture", mesh1.hasTexture());
 
+      if (mesh1.hasTexture()) {
+        shader.setInt("diffuseTex", 0);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, mesh1.getTexture());
+      }
       shader.setModel(gameObj.getTransform().getModel());
       shader.setCamera(camera);
       shader.setMaterialProp(objProp);
