@@ -33,6 +33,7 @@ int main(int arc, char* argv[]) {
   Window window;
   Camera camera;
   Shader shader("shaders/vertex.glsl", "shaders/fragment.glsl");
+  Overlay overlay;
 
   if (isArch()) // setting for arch
   {
@@ -82,6 +83,7 @@ int main(int arc, char* argv[]) {
 
     cameraControler.movementHandler();
     gameObj.inputHandler(window.get(), deltaTime);
+    overlay.handleInput(window.get());
 
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -103,6 +105,8 @@ int main(int arc, char* argv[]) {
     }
 
     gameObj.draw();
+
+    overlay.draw(SCR_WIDTH, SCR_HEIGHT);
 
     glfwSwapBuffers(window.get());
     glfwPollEvents();

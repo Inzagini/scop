@@ -12,6 +12,7 @@
 #include "class/GameObject.hpp"
 #include "class/Camera.hpp"
 #include "class/CameraControl.hpp"
+#include "class/Overlay.hpp"
 
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;

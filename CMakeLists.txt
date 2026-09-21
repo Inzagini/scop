@@ -17,6 +17,7 @@ set(SOURCES
     src/parse.cpp
     src/processInput.cpp
     src/MathUtils.cpp
+    src/Overlay.cpp
     glad/src/glad.c
 )
 
