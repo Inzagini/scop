@@ -8,20 +8,13 @@
 #include <string>
 #include <string_view>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "MathUtils.hpp"
 #include "class/Mesh.hpp"
 
 namespace {
-
-// push to obj vertex
-template <typename T, typename U>
-void pushToVector(T x, T y, T z, T offset, std::vector<U>& vec) {
-  vec.push_back(x - offset);
-  vec.push_back(y - offset);
-  vec.push_back(z - offset);
-}
 
 // Strip UTF-8 BOM, leading whitespace, and trailing CR/whitespace.
 std::string_view normalise(std::string_view s, bool firstLine) {
@@ -138,13 +131,63 @@ void recenter(std::vector<float>& verts, bool normaliseSize = false) {
     verts[i + 2] = (verts[i + 2] - cz) * scale;
   }
 }
-} // namespace
 
-static bool parseMaterial(const std::filesystem::path& fileName,
-                          Material& mat) {
+// Resolve a 1-based (or negative = relative) OBJ index into a 0-based index
+// into the raw array. Returns -1 if out of range.
+int resolveIndex(int idx, std::size_t count) {
+  if (idx > 0)
+    return (static_cast<std::size_t>(idx) <= count) ? idx - 1 : -1;
+  if (idx < 0)
+    return (static_cast<std::size_t>(-idx) <= count)
+               ? static_cast<int>(count) + idx
+               : -1;
+  return -1;
+}
+
+// Deduplicate a (position, texcoord) reference into obj, returning its index.
+unsigned getVertex(int vIdx, int vtIdx, const std::vector<float>& rawPos,
+                   const std::vector<float>& rawUV,
+                   std::unordered_map<std::uint64_t, unsigned>& vertexMap,
+                   ObjProp& obj) {
+  const int nv = static_cast<int>(rawPos.size() / 3);
+  const int nvt = static_cast<int>(rawUV.size() / 2);
+
+  const int rv = resolveIndex(vIdx, static_cast<std::size_t>(nv));
+  if (rv < 0)
+    return 0;
+  const int rvt =
+      (vtIdx == 0) ? -1 : resolveIndex(vtIdx, static_cast<std::size_t>(nvt));
+
+  const std::uint64_t key =
+      (static_cast<std::uint64_t>(rv) << 32) |
+      (rvt < 0 ? 0xFFFFFFFFu : static_cast<std::uint32_t>(rvt));
+  auto it = vertexMap.find(key);
+  if (it != vertexMap.end())
+    return it->second;
+
+  const unsigned newIdx = static_cast<unsigned>(obj.vertices.size() / 3);
+
+  const std::size_t pi = 3 * static_cast<std::size_t>(rv);
+  obj.vertices.push_back(rawPos[pi]);
+  obj.vertices.push_back(rawPos[pi + 1]);
+  obj.vertices.push_back(rawPos[pi + 2]);
+
+  if (rvt >= 0 && 2 * static_cast<std::size_t>(rvt) + 1 < rawUV.size()) {
+    obj.texCoords.push_back(rawUV[2 * static_cast<std::size_t>(rvt)]);
+    obj.texCoords.push_back(rawUV[2 * static_cast<std::size_t>(rvt) + 1]);
+  } else {
+    obj.texCoords.push_back(0.0f);
+    obj.texCoords.push_back(0.0f);
+  }
+
+  vertexMap[key] = newIdx;
+  return newIdx;
+}
+
+bool parseMaterial(const std::filesystem::path& fileName, Material& mat) {
   std::ifstream file(fileName);
   if (!file) {
-    std::cerr << "UNABLE TO OPEN MTL FILE: " << fileName << std::endl;
+    std::cerr << "UNABLE TO OPEN MTL FILE: " << fileName << '\n';
     return false;
   }
   std::cout << "OPENED MTL FILE: " << fileName << '\n';
@@ -194,96 +237,44 @@ static bool parseMaterial(const std::filesystem::path& fileName,
       continue;
     } else if (prefix == "map_Kd") {
 
-      std::cerr << "[Mtl] got map_Kd, rest = '" << rest << "'\n";
       const auto sp = rest.find_last_of(" \t");
       const std::string_view file =
           (sp == std::string_view::npos) ? rest : rest.substr(sp + 1);
       if (file.empty())
         return false;
       tmp.diffuseMap = (fileName.parent_path() / file).string();
-      std::cerr << "[Mtl] diffuseMap -> '" << tmp.diffuseMap << "'\n";
     } else
       std::cerr << "Line: " << lineNum << " CANNOT RECOGNIZE: " << prefix
-                << std::endl;
+                << '\n';
   }
 
   if (mtlCount > 1)
-    std::cerr << "ONLY 1 MATERIAL IS SUPPORTED" << std::endl;
+    std::cerr << "ONLY 1 MATERIAL IS SUPPORTED" << '\n';
 
   mat = tmp;
   return true;
 }
+} // namespace
 
 bool parseObj(const char* filePath, ObjProp& obj) {
   std::filesystem::path path(filePath);
 
   if (path.extension() != ".obj") {
-    std::cerr << "File is not type .obj" << std::endl;
+    std::cerr << "File is not type .obj" << '\n';
     return false;
   }
 
   std::ifstream file(filePath);
   if (!file) {
-    std::cerr << "UNABLE TO OPEN OBJECT FILE" << std::endl;
+    std::cerr << "UNABLE TO OPEN OBJECT FILE" << '\n';
     return false;
   }
   std::cout << "OPENED OBJ File: " << filePath << '\n';
-
-  constexpr float kVertexOffset = 0.0f;
 
   std::vector<float> rawPos; // all 'v' lines, flat xyz
   std::vector<float> rawUV;  // all 'vt' lines, flat uv
 
   std::unordered_map<std::uint64_t, unsigned> vertexMap;
-
-  // Resolve a 1-based (or negative = relative) OBJ index into a 0-based
-  // index into the raw array. Returns -1 if out of range.
-  auto resolve = [](int idx, std::size_t count) -> int {
-    if (idx > 0)
-      return (static_cast<std::size_t>(idx) <= count) ? idx - 1 : -1;
-    if (idx < 0)
-      return (static_cast<std::size_t>(-idx) <= count)
-                 ? static_cast<int>(count) + idx
-                 : -1;
-    return -1;
-  };
-
-  auto getVertex = [&](int vIdx, int vtIdx) -> unsigned {
-    const int nv = static_cast<int>(rawPos.size() / 3);
-    const int nvt = static_cast<int>(rawUV.size() / 2);
-
-    const int rv = resolve(vIdx, static_cast<std::size_t>(nv));
-    if (rv < 0)
-      return 0; // sentinel; caller checks later if you want
-    const int rvt =
-        (vtIdx == 0) ? -1 : resolve(vtIdx, static_cast<std::size_t>(nvt));
-
-    const std::uint64_t key =
-        (static_cast<std::uint64_t>(rv) << 32) |
-        (rvt < 0 ? 0xFFFFFFFFu : static_cast<std::uint32_t>(rvt));
-    auto it = vertexMap.find(key);
-    if (it != vertexMap.end())
-      return it->second;
-
-    const unsigned newIdx = static_cast<unsigned>(obj.vertices.size() / 3);
-
-    const std::size_t pi = 3 * static_cast<std::size_t>(rv);
-    obj.vertices.push_back(rawPos[pi]);
-    obj.vertices.push_back(rawPos[pi + 1]);
-    obj.vertices.push_back(rawPos[pi + 2]);
-
-    if (rvt >= 0 &&
-        2 * static_cast<std::size_t>(rvt) + 1 < rawUV.size()) {
-      obj.texCoords.push_back(rawUV[2 * static_cast<std::size_t>(rvt)]);
-      obj.texCoords.push_back(rawUV[2 * static_cast<std::size_t>(rvt) + 1]);
-    } else {
-      obj.texCoords.push_back(0.0f);
-      obj.texCoords.push_back(0.0f);
-    }
-
-    vertexMap[key] = newIdx;
-    return newIdx;
-  };
 
   std::string raw;
   int lineNum{};
@@ -299,26 +290,22 @@ bool parseObj(const char* filePath, ObjProp& obj) {
 
     if (prefix == "v") {
       float x, y, z;
-      // Some exporters append an optional 'w' weight; ignore it.
       if (!parsePrefix(rest, x, y, z))
         return false;
       rawPos.push_back(x);
       rawPos.push_back(y);
       rawPos.push_back(z);
 
-    } else if (prefix == "vn") {
-      continue;
+    } else if (prefix == "vn" || prefix == "g" || prefix == "o" ||
+               prefix == "usemtl") {
+      // ignored
 
     } else if (prefix == "vt") {
       float u, v;
-      // Some exporters append an optional 'w' depth; ignore it.
       if (!parsePrefix(rest, u, v))
         return false;
       rawUV.push_back(u);
       rawUV.push_back(v);
-
-    } else if (prefix == "g") {
-      continue;
 
     } else if (prefix == "f") {
       std::vector<unsigned> face;
@@ -328,7 +315,7 @@ bool parseObj(const char* filePath, ObjProp& obj) {
         int v, vt;
         if (!parseFaceRef(tok, v, vt))
           return false;
-        face.push_back(getVertex(v, vt));
+        face.push_back(getVertex(v, vt, rawPos, rawUV, vertexMap, obj));
       }
       if (face.size() < 3)
         return false;
@@ -336,42 +323,32 @@ bool parseObj(const char* filePath, ObjProp& obj) {
 
     } else if (prefix == "mtllib") {
       std::string fileName;
+      // if malformed, keep parsing
       if (!parseAll(rest, fileName))
-        break;
+        continue;
 
       const auto dir = path.parent_path();
       if (!parseMaterial(dir / fileName, obj.material))
-        std::cerr << "MATERIAL parse failed\n Skipping... USING DEFAULT"
-                  << std::endl;
-      std::cerr << "[Obj] mtllib file: " << fileName << '\n';
-    } else if (prefix == "o") {
-      continue;
-
-    } else if (prefix == "usemtl") {
-      // Single-material loader: the one material from mtllib is used.
-      continue;
-
+        std::cerr << "MATERIAL parse failed\n Skipping... USING DEFAULT\n";
     } else if (prefix == "s") {
-      std::cerr << "SMOOTHING NOT SUPPORTED\n continuing..." << std::endl;
+      std::cerr << "SMOOTHING NOT SUPPORTED\n continuing...\n";
 
     } else {
-      std::cerr << "Line: " << lineNum << " CANNOT RECOGNIZE: " << raw
-                << std::endl;
+      std::cerr << "Line: " << lineNum << " CANNOT RECOGNIZE: " << raw << '\n';
       return false;
     }
   }
 
   recenter(obj.vertices);
 
-  // Smooth (per-vertex) normals; works whether or not the OBJ has vn.
   obj.normals.assign(obj.vertices.size(), 0.0f);
+  auto P = [&](unsigned v) {
+    return Vec3(obj.vertices[3 * v], obj.vertices[3 * v + 1],
+                obj.vertices[3 * v + 2]);
+  };
   for (std::size_t i = 0; i + 2 < obj.indices.size(); i += 3) {
     const unsigned a = obj.indices[i], b = obj.indices[i + 1],
                    c = obj.indices[i + 2];
-    auto P = [&](unsigned v) {
-      return Vec3(obj.vertices[3 * v], obj.vertices[3 * v + 1],
-                  obj.vertices[3 * v + 2]);
-    };
     const Vec3 n = MathUtils::cross(P(b) - P(a), P(c) - P(a));
     for (unsigned v : {a, b, c}) {
       obj.normals[3 * v] += n.x;
