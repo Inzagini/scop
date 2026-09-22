@@ -21,6 +21,16 @@ Mesh* GameObject::getMesh() { return mesh; }
 Transform GameObject::getTransform() { return transform; }
 
 void GameObject::inputHandler(GLFWwindow* window, float& dTime) {
+  // T toggles the auto-rotate turntable. Edge detection so one press flips it
+  // exactly once instead of once per frame while the key is held.
+  static bool tWasPressed = false;
+  const bool tPressed = glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS;
+
+  if (tPressed && !tWasPressed)
+    autoRotate = !autoRotate;
+
+  tWasPressed = tPressed;
+
   movementHandler(window, dTime);
 }
 
@@ -59,6 +69,7 @@ void GameObject::mouseHandler(GLFWwindow* window, float& dTime) {
 
 void GameObject::movementHandler(GLFWwindow* window, float& dTime) {
   float speed = 2.0f;
+  constexpr float autoRotateSpeed = 45.0f; // turntable spin, degrees per second
 
   // Move Game object
   if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
@@ -98,5 +109,10 @@ void GameObject::movementHandler(GLFWwindow* window, float& dTime) {
   if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
     transform.setRotationZ(transform.getRotationZ() + speed * dTime * 30);
   }
+  // Auto-rotate turntable: keep spinning around Y every frame while T is on.
+  // Added after the manual keys so it composes with user rotation.
+  if (autoRotate)
+    transform.setRotationY(transform.getRotationY() + autoRotateSpeed * dTime);
+
   mouseHandler(window, dTime);
 }

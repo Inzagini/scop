@@ -127,6 +127,7 @@ Overlay::Overlay() {
       "  Scroll       zoom\n"
       "  F            toggle color\n"
       "  G            toggle wireframe\n"
+      "  T            auto-rotate\n"
       "  Esc          quit";
 
   const float textW = static_cast<float>(stb_easy_font_width(legend));
