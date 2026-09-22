@@ -98,7 +98,7 @@ scop/
 
 3. Run the application:
    ```bash
-   ./scop [path to .obj file]
+   ./build/scop [path to .obj file]
    ```
 
 ## Usage 🎮
@@ -109,10 +109,17 @@ scop/
   ./build/scop resources/your_model.obj
   ```
 - Use the following controls to navigate the 3D scene:
-  - `W`, `A`, `S`, `D`: Move the object in space.
-  - `F`: Toggle texture rendering.
-  - Hold and drag the scroll mouse button: Rotate the camera.
-  - Scroll the mouse button: Zoom in and out.
+  - `W`, `A`, `S`, `D`: Move the object.
+  - `Q` / `E`: Rotate the object around Y.
+  - Arrow keys: Rotate the object around X / Z.
+  - `Space`: Re-centre the object.
+  - Left mouse drag: Rotate the object.
+  - Middle mouse drag: Orbit the camera.
+  - Mouse scroll: Zoom in and out (hold `Ctrl` for 10x faster).
+  - `F`: Toggle the coloured/textured view.
+  - `G`: Toggle the triangle wireframe (raw view only).
+  - `T`: Toggle auto-rotate.
+  - Click the `?` button: Toggle the on-screen controls legend.
   - `Esc`: Exit the application.
 
 ## File Descriptions 📜
@@ -128,6 +135,7 @@ scop/
 - `lsan.supp`: LeakSanitizer suppression configuration for imported libary.
 
 ## AI Usage 🤖
+
 AI tools were used as an auxiliary resource during the development of this project.
 
 AI assistance was used for tasks such as:
