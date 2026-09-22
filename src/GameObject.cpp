@@ -1,5 +1,6 @@
 #include "class/GameObject.hpp"
 
+// Draws the mesh, enabling alpha blending when the material is transparent.
 void GameObject::draw() {
   const float solid{1.0f};
 
@@ -20,9 +21,8 @@ Mesh* GameObject::getMesh() { return mesh; }
 
 Transform GameObject::getTransform() { return transform; }
 
+// Handles per-frame input and delegates movement to movementHandler.
 void GameObject::inputHandler(GLFWwindow* window, float& dTime) {
-  // T toggles the auto-rotate turntable. Edge detection so one press flips it
-  // exactly once instead of once per frame while the key is held.
   static bool tWasPressed = false;
   const bool tPressed = glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS;
 
@@ -34,12 +34,14 @@ void GameObject::inputHandler(GLFWwindow* window, float& dTime) {
   movementHandler(window, dTime);
 }
 
+// Recentres the object at the origin.
 void GameObject::centerObj() {
   transform.setPositionX(0);
   transform.setPositionY(0);
   transform.setPositionZ(0);
 }
 
+// Rotates the object by left-drag mouse movement.
 void GameObject::mouseHandler(GLFWwindow* window, float& dTime) {
 
   double mx, my;
@@ -67,11 +69,11 @@ void GameObject::mouseHandler(GLFWwindow* window, float& dTime) {
   }
 }
 
+// Applies keyboard movement/rotation and the optional auto-rotate turntable.
 void GameObject::movementHandler(GLFWwindow* window, float& dTime) {
   float speed = 2.0f;
-  constexpr float autoRotateSpeed = 45.0f; // turntable spin, degrees per second
+  constexpr float autoRotateSpeed = 45.0f;
 
-  // Move Game object
   if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
     transform.setPositionY(transform.getPositionY() + speed * dTime);
   }
@@ -88,7 +90,6 @@ void GameObject::movementHandler(GLFWwindow* window, float& dTime) {
     centerObj();
   }
 
-  // Rotation Game object
   if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
     transform.setRotationY(transform.getRotationY() - speed * dTime * 30);
   }
@@ -109,8 +110,6 @@ void GameObject::movementHandler(GLFWwindow* window, float& dTime) {
   if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
     transform.setRotationZ(transform.getRotationZ() + speed * dTime * 30);
   }
-  // Auto-rotate turntable: keep spinning around Y every frame while T is on.
-  // Added after the manual keys so it composes with user rotation.
   if (autoRotate)
     transform.setRotationY(transform.getRotationY() + autoRotateSpeed * dTime);
 

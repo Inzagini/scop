@@ -20,6 +20,7 @@ struct HudVertex {
 };
 static_assert(sizeof(HudVertex) == 16, "must match stb_easy_font layout");
 
+// Reads a text file into a string; aborts if it cannot open it.
 std::string loadFile(const std::string& path) {
   std::ifstream file(path);
   if (!file.is_open()) {
@@ -31,6 +32,7 @@ std::string loadFile(const std::string& path) {
   return ss.str();
 }
 
+// Compiles one HUD shader stage and aborts on failure.
 unsigned compileShader(unsigned type, const std::string& src) {
   unsigned shader = glCreateShader(type);
   const char* c = src.c_str();
@@ -48,6 +50,7 @@ unsigned compileShader(unsigned type, const std::string& src) {
   return shader;
 }
 
+// Links the HUD shader stages into a program and aborts on failure.
 unsigned makeProgram(const std::string& vsrc, const std::string& fsrc) {
   unsigned vs = compileShader(GL_VERTEX_SHADER, vsrc);
   unsigned fs = compileShader(GL_FRAGMENT_SHADER, fsrc);
@@ -70,10 +73,10 @@ unsigned makeProgram(const std::string& vsrc, const std::string& fsrc) {
   return program;
 }
 
-// Append the glyph quads of `text` (colored white) to `verts`, return #quads.
+// Appends the glyph quads of `text` to `verts` and returns the quad count.
 unsigned appendText(std::vector<HudVertex>& verts, float x, float y,
                     char* text) {
-  std::vector<char> buf(100000); // ~270 bytes/char, plenty
+  std::vector<char> buf(100000);
   const int quads =
       stb_easy_font_print(x, y, text, nullptr, buf.data(),
                           static_cast<int>(buf.size()));
@@ -84,15 +87,16 @@ unsigned appendText(std::vector<HudVertex>& verts, float x, float y,
 
 } // namespace
 
+// Builds the HUD geometry (button + legend) and uploads it once.
 Overlay::Overlay() {
   program = makeProgram(loadFile("shaders/hud.vert"),
                         loadFile("shaders/hud.frag"));
   uScreenLoc = glGetUniformLocation(program, "uScreen");
 
-  const float scale = 3.0f;      // stb font is ~7px tall natively
-  const float margin = 4.0f;     // distance from window corner (native units)
-  const float buttonSize = 12.0f; // native units
-  const float pad = 6.0f;        // text inset inside the legend panel
+  const float scale = 3.0f;
+  const float margin = 4.0f;
+  const float buttonSize = 12.0f;
+  const float pad = 6.0f;
 
   std::vector<HudVertex> verts;
   auto pushQuad = [&](float x0, float y0, float x1, float y1, unsigned char r,
@@ -103,7 +107,6 @@ Overlay::Overlay() {
     verts.push_back({x0, y1, 0, r, g, b, a});
   };
 
-  // --- "?" button (always visible) ---
   pushQuad(margin, margin, margin + buttonSize, margin + buttonSize, 40, 40, 60,
            220);
   char buttonLabel[] = "?";
@@ -115,7 +118,6 @@ Overlay::Overlay() {
   btnX1 = (margin + buttonSize) * scale;
   btnY1 = (margin + buttonSize) * scale;
 
-  // --- controls legend (hidden until toggled) ---
   char legend[] =
       "Controls:\n"
       "  W A S D      move object\n"
@@ -140,7 +142,6 @@ Overlay::Overlay() {
   legendQuadCount =
       1 + appendText(verts, panelX + pad, panelY + pad, legend);
 
-  // Scale the native font up to a readable size.
   for (auto& v : verts) {
     v.x *= scale;
     v.y *= scale;
@@ -182,6 +183,7 @@ Overlay::Overlay() {
   glBindVertexArray(0);
 }
 
+// Releases the HUD GL objects.
 Overlay::~Overlay() {
   glDeleteVertexArrays(1, &vao);
   glDeleteBuffers(1, &vbo);
@@ -189,6 +191,7 @@ Overlay::~Overlay() {
   glDeleteProgram(program);
 }
 
+// Toggles the legend when the "?" button is clicked.
 void Overlay::handleInput(GLFWwindow* window) {
   const bool down =
       glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
@@ -202,6 +205,7 @@ void Overlay::handleInput(GLFWwindow* window) {
   mouseWasDown = down;
 }
 
+// Draws the HUD in screen space on top of the scene.
 void Overlay::draw(int screenW, int screenH) const {
   glDisable(GL_DEPTH_TEST);
   glEnable(GL_BLEND);
@@ -213,10 +217,8 @@ void Overlay::draw(int screenW, int screenH) const {
 
   glBindVertexArray(vao);
 
-  // "?" button is always drawn.
   glDrawElements(GL_TRIANGLES, buttonQuadCount * 6, GL_UNSIGNED_INT, nullptr);
 
-  // Legend only when toggled on.
   if (visible)
     glDrawElements(GL_TRIANGLES, legendQuadCount * 6, GL_UNSIGNED_INT,
                    reinterpret_cast<void*>(buttonQuadCount * 6 *

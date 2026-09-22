@@ -1,5 +1,6 @@
 #include "class/Shader.hpp"
 
+// Loads, compiles and links the vertex/fragment shader pair.
 Shader::Shader(const std::string& vertexShaderSourcePath,
                const std::string& fragmentShaderSourcePath) {
   std::string vertexShaderSource = loadShader(vertexShaderSourcePath);
@@ -26,15 +27,14 @@ unsigned int Shader::getID() { return ID; }
 
 void Shader::setModel(Mat4 model) { setMat4("model", model); }
 
+// Flips the coloured/textured view state.
 void Shader::colorToggle() {
   colorEnabled = !colorEnabled;
   setBool("colorEnabled", colorEnabled);
 }
 
-// Edge-detected key handling: F flips the textured/coloured view, G flips the
-// triangle-outline overlay. Edge detection keeps one key press = one toggle.
+// Toggles colour (F) and wireframe (G) on key press.
 void Shader::inputHandler(GLFWwindow* window) {
-  // F -> colour/texture toggle (held state compared with the previous frame).
   static bool waspresssed = false;
   bool keyPress = glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS;
 
@@ -43,7 +43,6 @@ void Shader::inputHandler(GLFWwindow* window) {
 
   waspresssed = keyPress;
 
-  // G -> wireframe toggle, starts off so nothing is drawn until pressed.
   static bool gWasPressed = false;
   bool gPress = glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS;
 
@@ -53,6 +52,7 @@ void Shader::inputHandler(GLFWwindow* window) {
   gWasPressed = gPress;
 }
 
+// Compiles one shader stage and aborts on failure.
 unsigned int Shader::createAndCompileShader(unsigned int type,
                                             const char* source) {
   unsigned int shader = glCreateShader(type);
@@ -63,6 +63,7 @@ unsigned int Shader::createAndCompileShader(unsigned int type,
   return shader;
 }
 
+// Links the shader stages into the program and aborts on failure.
 void Shader::attachAndLinkShaders(unsigned int vertexShader,
                                   unsigned int fragmentShader) {
   this->ID = glCreateProgram();
@@ -80,6 +81,7 @@ void Shader::attachAndLinkShaders(unsigned int vertexShader,
   }
 }
 
+// Prints the compile log and aborts when a stage failed to compile.
 void Shader::ErrorMessage(unsigned int shader, unsigned int type) {
   int succeded{};
   char infolog[512];
@@ -93,6 +95,7 @@ void Shader::ErrorMessage(unsigned int shader, unsigned int type) {
   }
 }
 
+// Reads a shader source file into a string; aborts if it cannot open it.
 std::string Shader::loadShader(const std::string& name) {
   std::ifstream file(name);
   if (!file.is_open()) {
@@ -105,6 +108,7 @@ std::string Shader::loadShader(const std::string& name) {
   return ss.str();
 }
 
+// Uploads the parsed material values to the shader uniforms.
 void Shader::setMaterialProp(ObjProp& objProp) {
   setVec3("material.ambient", objProp.material.ambient);
   setVec3("material.diffuse", objProp.material.diffuse);
@@ -114,15 +118,17 @@ void Shader::setMaterialProp(ObjProp& objProp) {
   setBool("colorEnabled", colorEnabled);
 }
 
+// Uploads the view/projection matrices and camera position.
 void Shader::setCamera(Camera& camera) {
   setMat4("view", camera.getView());
   setMat4("projection", camera.getProjection());
   setVec3("viewPos", camera.getPosition());
 }
 
+// Uploads the directional light direction and a white light colour.
 void Shader::setLight(const Vec3& dir) {
   setVec3("lightDir", MathUtils::normalize(dir));
-  setVec3("lightColor", Vec3(1.0f)); // white light
+  setVec3("lightColor", Vec3(1.0f));
 }
 
 void Shader::setVec4(const std::string& name, float x, float y, float z,
@@ -147,10 +153,8 @@ void Shader::setInt(const std::string& name, const int n) const {
   glUniform1i(glGetUniformLocation(ID, name.c_str()), n);
 }
 
-// Tells the caller whether the raw/unlit view (triangle outlines) is active.
 bool Shader::isColorEnabled() const { return colorEnabled; }
 
-// Tells the caller whether the G-key triangle outlines are switched on.
 bool Shader::isWireframeEnabled() const { return wireframeEnabled; }
 
 void Shader::setBool(const std::string& name, const bool n) const {

@@ -34,7 +34,7 @@ class Camera
         const float     aspectRatio = static_cast<float>(SCR_WIDTH) / SCR_HEIGHT;
         const float     nearPlane{0.1f};
         float           farPlane{100.0f};
-        float           radius = MathUtils::length(position - target); //distance camera from target
+        float           radius = MathUtils::length(position - target);
         float           yaw = MathUtils::degrees(atan2((position - target).z, (position - target).x));
         float           pitch = MathUtils::degrees(asin((position - target).y / radius));
 

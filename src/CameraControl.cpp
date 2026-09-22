@@ -2,32 +2,32 @@
 
 #include <iostream>
 
+// Stores the window/camera and the zoom limits.
 void CameraControl::init(GLFWwindow* window, Camera* camera) {
   this->window = window;
   this->camera = camera;
-  maxZoomOut = camera->getRadius() * 4.0f; // zoom-out headroom past the fitted distance
+  maxZoomOut = camera->getRadius() * 4.0f;
 }
 
+// Per-frame camera update hook.
 void CameraControl::movementHandler() { mouseHandler(); }
 
+// Registers the scroll and middle-drag input callbacks.
 void CameraControl::mouseHandler() {
-  // handling the scrollwheel
   glfwSetScrollCallback(window, scrollCallback);
-
-  // handling the scrollwheel click drag
   glfwSetMouseButtonCallback(window, mouseButtonCallback);
   glfwSetCursorPosCallback(window, scrollDragCallback);
 }
 
+// Zooms the camera by the scroll amount (10x faster while Ctrl is held).
 void CameraControl::onScroll(double dx, double dy) {
-  dx = dx; // not used
+  dx = dx;
   Vec3 offset = camera->getPosition() - target;
 
-  // Holding Ctrl (either side) makes each scroll step ten times faster.
   const bool fastZoom =
       glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS ||
       glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS;
-  const float zoomSpeed = fastZoom ? 3.0f : 0.3f; // 10x the normal 0.3 step
+  const float zoomSpeed = fastZoom ? 3.0f : 0.3f;
 
   float distance = MathUtils::length(offset);
 
@@ -41,6 +41,7 @@ void CameraControl::onScroll(double dx, double dy) {
   camera->move(target + offset);
 }
 
+// Orbits the camera around the target from the middle-drag delta.
 void CameraControl::onDrag(double xPos, double yPos) {
   float dx = xPos - lastMouseX;
   float dy = yPos - lastMouseY;
@@ -71,6 +72,7 @@ void CameraControl::onDrag(double xPos, double yPos) {
   camera->move(target + direction);
 }
 
+// Records the middle-button state and seeds the drag anchor.
 void CameraControl::onMiddleButtonPress(bool state) {
   middleMousePressed = state;
   glfwGetCursorPos(window, &lastMouseX, &lastMouseY);

@@ -1,22 +1,8 @@
-#include <algorithm>
-#include <charconv>
-#include <cmath>
-#include <cstdint>
-#include <filesystem>
-#include <fstream>
-#include <iostream>
-#include <sstream>
-#include <string>
-#include <string_view>
-#include <unordered_map>
-#include <vector>
-
-#include "MathUtils.hpp"
-#include "class/Mesh.hpp"
+#include "parse.hpp"
 
 namespace {
 
-// push to obj vertex
+// Appends an offset (x, y, z) triple to a flat float vector.
 template <typename T, typename U>
 void pushToVector(T x, T y, T z, T offset, std::vector<U>& vec) {
   vec.push_back(x - offset);
@@ -53,21 +39,22 @@ splitFirst(std::string_view line) {
   return {line.substr(0, sp), rest};
 }
 
-// Read exactly the values supplied; fails on missing or trailing junk.
+// Parses exactly the supplied values, rejecting trailing junk.
 template <typename... Ts> bool parseAll(std::string_view s, Ts&... out) {
   std::istringstream ss{std::string{s}};
-  if (!((ss >> out) && ...)) // all must succeed
+  if (!((ss >> out) && ...))
     return false;
   std::string extra;
-  return !(ss >> extra); // nothing must be left
+  return !(ss >> extra);
 }
 
-// Read the first N values; trailing junk is allowed.
+// Parses the first values, ignoring trailing junk.
 template <typename... Ts> bool parsePrefix(std::string_view s, Ts&... out) {
   std::istringstream ss{std::string{s}};
   return ((ss >> out) && ...);
 }
 
+// Parses a full-token decimal integer.
 bool parseInt(std::string_view s, int& out) {
   if (s.empty())
     return false;
@@ -75,8 +62,7 @@ bool parseInt(std::string_view s, int& out) {
   return ec == std::errc{} && p == s.data() + s.size();
 }
 
-// "v", "v/vt", "v//vn", "v/vt/vn" -> v (signed, 1-based; negative = relative)
-// and vt (same convention, 0 = none).
+// Parses a "v/vt" face token into position and UV indices.
 bool parseFaceRef(std::string_view tok, int& vOut, int& vtOut) {
   const auto s1 = tok.find('/');
   vtOut = 0;
@@ -90,15 +76,12 @@ bool parseFaceRef(std::string_view tok, int& vOut, int& vtOut) {
                                     ? tok.substr(s1 + 1)
                                     : tok.substr(s1 + 1, s2 - s1 - 1);
     if (!vt.empty() && !parseInt(vt, vtOut))
-      return false; // present but malformed
+      return false;
   }
   return true;
 }
 
-// Ear-clip a simple polygon (convex, concave, or non-planar) into triangles.
-// A fixed fan puts triangles outside concave polygons, and on non-planar quads
-// its one diagonal causes the crease / UV stretch. Ear clipping respects the
-// real outline and prefers the shortest valid diagonal when several ears exist.
+// Ear-clips a polygon (convex, concave or non-planar) into triangles.
 void triangulate(const std::vector<unsigned>& face,
                  const std::vector<float>& vertices,
                  std::vector<unsigned>& out) {
@@ -118,7 +101,6 @@ void triangulate(const std::vector<unsigned>& face,
     return;
   }
 
-  // Newell's method: robust normal even for non-planar polygons.
   Vec3 normal(0.0f);
   for (std::size_t i = 0; i < n; ++i) {
     const Vec3 a = P(face[i]);
@@ -128,7 +110,6 @@ void triangulate(const std::vector<unsigned>& face,
     normal.z += (a.x - b.x) * (a.y + b.y);
   }
 
-  // Project onto the plane the polygon is most aligned with.
   const float ax = std::fabs(normal.x), ay = std::fabs(normal.y),
               az = std::fabs(normal.z);
   const int axis = (ay >= ax && ay >= az) ? 1 : (az >= ax ? 2 : 0);
@@ -159,17 +140,16 @@ void triangulate(const std::vector<unsigned>& face,
       const Vec3 a = P(poly[prev]), b = P(poly[i]), c = P(poly[next]);
 
       if (sign * cross2(a, b, c) <= 0.0f)
-        continue; // reflex corner, not an ear
+        continue;
 
       bool ear = true;
       for (std::size_t j = 0; j < poly.size() && ear; ++j) {
         if (j == prev || j == i || j == next)
           continue;
         const Vec3 p = P(poly[j]);
-        if (sign * cross2(a, b, p) >= 0.0f &&
-            sign * cross2(b, c, p) >= 0.0f &&
+        if (sign * cross2(a, b, p) >= 0.0f && sign * cross2(b, c, p) >= 0.0f &&
             sign * cross2(c, a, p) >= 0.0f)
-          ear = false; // another vertex blocks this ear
+          ear = false;
       }
       if (!ear)
         continue;
@@ -182,7 +162,7 @@ void triangulate(const std::vector<unsigned>& face,
     }
 
     if (best == poly.size())
-      break; // degenerate polygon; fall through to a fan
+      break;
 
     const std::size_t prev = (best + poly.size() - 1) % poly.size();
     const std::size_t next = (best + 1) % poly.size();
@@ -192,7 +172,6 @@ void triangulate(const std::vector<unsigned>& face,
     poly.erase(poly.begin() + best);
   }
 
-  // Fan any remainder (normally only the last triangle, or the fallback).
   for (std::size_t i = 1; i + 1 < poly.size(); ++i) {
     out.push_back(poly[0]);
     out.push_back(poly[i]);
@@ -200,6 +179,7 @@ void triangulate(const std::vector<unsigned>& face,
   }
 }
 
+// Recentres vertices on their bounding-box centre; optionally normalises size.
 void recenter(std::vector<float>& verts, bool normaliseSize = false) {
   if (verts.empty())
     return;
@@ -235,8 +215,7 @@ void recenter(std::vector<float>& verts, bool normaliseSize = false) {
   }
 }
 
-// Resolve a 1-based (or negative = relative) OBJ index into a 0-based index
-// into the raw array. Returns -1 if out of range.
+// Resolves a 1-based (or negative) OBJ index; returns -1 if out of range.
 int resolveIndex(int idx, std::size_t count) {
   if (idx > 0)
     return (static_cast<std::size_t>(idx) <= count) ? idx - 1 : -1;
@@ -247,9 +226,7 @@ int resolveIndex(int idx, std::size_t count) {
   return -1;
 }
 
-// Fetch (or create) the output vertex for a position/UV index pair. Vertices
-// are deduplicated on (position, uv), so shared corners are reused while UV
-// seams keep a distinct copy. Appends to obj and records the new index.
+// Returns the deduplicated output vertex for a position/UV pair, appending it.
 unsigned getVertex(int vIdx, int vtIdx, const std::vector<float>& rawPos,
                    const std::vector<float>& rawUV, ObjProp& obj,
                    std::unordered_map<std::uint64_t, unsigned>& vertexMap) {
@@ -258,7 +235,7 @@ unsigned getVertex(int vIdx, int vtIdx, const std::vector<float>& rawPos,
 
   const int rv = resolveIndex(vIdx, static_cast<std::size_t>(nv));
   if (rv < 0)
-    return 0; // sentinel; caller checks later if you want
+    return 0;
   const int rvt =
       (vtIdx == 0) ? -1 : resolveIndex(vtIdx, static_cast<std::size_t>(nvt));
 
@@ -289,6 +266,7 @@ unsigned getVertex(int vIdx, int vtIdx, const std::vector<float>& rawPos,
 }
 } // namespace
 
+// Parses an .mtl file into a Material (only the first material is kept).
 static bool parseMaterial(const std::filesystem::path& fileName,
                           Material& mat) {
   std::ifstream file(fileName);
@@ -339,7 +317,7 @@ static bool parseMaterial(const std::filesystem::path& fileName,
     } else if (prefix == "illum" || prefix == "Ni" || prefix == "Tr" ||
                prefix == "Tf" || prefix == "Ke" || prefix == "map_Ka" ||
                prefix == "map_Ks" || prefix == "map_Ns" || prefix == "map_d" ||
-               prefix == "map_bump" || prefix == "bump") { /* ignored */
+               prefix == "map_bump" || prefix == "bump") {
       continue;
     } else if (prefix == "map_Kd") {
 
@@ -363,6 +341,7 @@ static bool parseMaterial(const std::filesystem::path& fileName,
   return true;
 }
 
+// Parses an .obj file into ObjProp (vertices, UVs, indices, material).
 bool parseObj(const char* filePath, ObjProp& obj) {
   std::filesystem::path path(filePath);
 
@@ -380,8 +359,8 @@ bool parseObj(const char* filePath, ObjProp& obj) {
 
   constexpr float kVertexOffset = 0.0f;
 
-  std::vector<float> rawPos; // all 'v' lines, flat xyz
-  std::vector<float> rawUV;  // all 'vt' lines, flat uv
+  std::vector<float> rawPos;
+  std::vector<float> rawUV;
 
   std::unordered_map<std::uint64_t, unsigned> vertexMap;
 
@@ -399,7 +378,6 @@ bool parseObj(const char* filePath, ObjProp& obj) {
 
     if (prefix == "v") {
       float x, y, z;
-      // Some exporters append an optional 'w' weight; ignore it.
       if (!parsePrefix(rest, x, y, z))
         return false;
       rawPos.push_back(x);
@@ -411,7 +389,6 @@ bool parseObj(const char* filePath, ObjProp& obj) {
 
     } else if (prefix == "vt") {
       float u, v;
-      // Some exporters append an optional 'w' depth; ignore it.
       if (!parsePrefix(rest, u, v))
         return false;
       rawUV.push_back(u);
@@ -448,7 +425,6 @@ bool parseObj(const char* filePath, ObjProp& obj) {
       continue;
 
     } else if (prefix == "usemtl") {
-      // Single-material loader: the one material from mtllib is used.
       continue;
 
     } else if (prefix == "s") {
@@ -463,7 +439,6 @@ bool parseObj(const char* filePath, ObjProp& obj) {
 
   recenter(obj.vertices);
 
-  // Smooth (per-vertex) normals; works whether or not the OBJ has vn.
   obj.normals.assign(obj.vertices.size(), 0.0f);
   for (std::size_t i = 0; i + 2 < obj.indices.size(); i += 3) {
     const unsigned a = obj.indices[i], b = obj.indices[i + 1],

@@ -1,16 +1,17 @@
 #include "class/Mesh.hpp"
 #include "Texture.hpp"
 
+// Uploads positions, UVs, normals and indices to GPU buffers and loads the
+// material's diffuse texture, if any.
 Mesh::Mesh(const ObjProp& obj, const unsigned int& size,
            const unsigned int drawType)
     : opacity(obj.material.opacity) {
   indexCount = obj.indices.size();
-  vertexCount = obj.vertices.size() / 3; // 3 floats per vertex
+  vertexCount = obj.vertices.size() / 3;
 
   glGenVertexArrays(1, &VAO);
   glBindVertexArray(VAO);
 
-  // --- position (location 0) ---
   glGenBuffers(1, &VBO);
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
   glBufferData(GL_ARRAY_BUFFER, obj.vertices.size() * sizeof(float),
@@ -18,7 +19,6 @@ Mesh::Mesh(const ObjProp& obj, const unsigned int& size,
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
   glEnableVertexAttribArray(0);
 
-  // --- indices ---
   if (!obj.indices.empty()) {
     glGenBuffers(1, &EBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
@@ -27,10 +27,9 @@ Mesh::Mesh(const ObjProp& obj, const unsigned int& size,
                  drawType);
   }
 
-  // --- UV (location 2) ---
   if (!obj.texCoords.empty()) {
     glGenBuffers(1, &uvVBO);
-    glBindBuffer(GL_ARRAY_BUFFER, uvVBO); // bind *just before* its attrib
+    glBindBuffer(GL_ARRAY_BUFFER, uvVBO);
     glBufferData(GL_ARRAY_BUFFER, obj.texCoords.size() * sizeof(float),
                  obj.texCoords.data(), GL_STATIC_DRAW);
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float),
@@ -38,7 +37,6 @@ Mesh::Mesh(const ObjProp& obj, const unsigned int& size,
     glEnableVertexAttribArray(2);
   }
 
-  // --- normals (location 1) ---
   glGenBuffers(1, &normalVBO);
   glBindBuffer(GL_ARRAY_BUFFER, normalVBO);
   glBufferData(GL_ARRAY_BUFFER, obj.normals.size() * sizeof(float),
@@ -48,7 +46,6 @@ Mesh::Mesh(const ObjProp& obj, const unsigned int& size,
 
   glBindVertexArray(0);
 
-  // --- texture ---
   if (!obj.material.diffuseMap.empty()) {
     std::cerr << "[Mesh] about to load: '" << obj.material.diffuseMap << "'\n";
     texture = loadTexture2D(obj.material.diffuseMap);
@@ -58,6 +55,7 @@ Mesh::Mesh(const ObjProp& obj, const unsigned int& size,
   }
 }
 
+// Releases the GL buffers, VAO and texture.
 Mesh::~Mesh() {
   glDeleteVertexArrays(1, &VAO);
   glDeleteBuffers(1, &VBO);
@@ -68,6 +66,7 @@ Mesh::~Mesh() {
     glDeleteTextures(1, &texture);
 }
 
+// Draws the mesh with its index buffer, or the vertex array if unindexed.
 void Mesh::draw() {
   glBindVertexArray(VAO);
   if (indexCount)

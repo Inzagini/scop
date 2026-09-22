@@ -40,7 +40,7 @@ Mat4 lookAt(const Vec3& eye, const Vec3& center, const Vec3& up);
 Vec3 normalize(const Vec3&);
 Mat4 perspective(const float& fov, const float& aspect, const float& nearPlane,
                  const float& farPlane);
-}; // namespace MathUtils
+};
 
 Vec3 operator-(const Vec3& a, const Vec3& b);
 Vec3 operator+(const Vec3& a, const Vec3& b);

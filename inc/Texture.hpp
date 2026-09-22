@@ -7,9 +7,10 @@
 
 namespace {
 
+// Loads a 2D texture from disk; returns its GL id (0 on failure).
 unsigned int loadTexture2D(const std::string& path) {
   int w, h, channels;
-  stbi_set_flip_vertically_on_load(true); // OBJ v-origin is bottom-left
+  stbi_set_flip_vertically_on_load(true);
   unsigned char* data = stbi_load(path.c_str(), &w, &h, &channels, 0);
   if (!data) {
     std::cerr << "Failed to load texture: " << path << '\n';

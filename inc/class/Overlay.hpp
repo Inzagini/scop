@@ -2,8 +2,7 @@
 
 struct GLFWwindow;
 
-// Minimal 2D text overlay drawn in screen space after the 3D scene.
-// A "?" button is always visible; clicking it toggles the controls legend.
+// Screen-space HUD: a "?" button toggles the controls legend.
 class Overlay {
 public:
   Overlay();
@@ -27,6 +26,5 @@ private:
   bool visible{false};
   bool mouseWasDown{false};
 
-  // "?" button hit rectangle in screen pixels.
   float btnX0{}, btnY0{}, btnX1{}, btnY1{};
 };

@@ -1,7 +1,6 @@
 #include "scop.hpp"
 
-// check if os is arch
-
+// Returns true on Arch-based Linux.
 bool isArch() {
   std::ifstream file("/etc/os-release");
 
@@ -19,6 +18,7 @@ bool isArch() {
   return false;
 }
 
+// Entry point: set up GL, load the OBJ, run the render loop.
 int main(int arc, char* argv[]) {
   if (arc != 2) {
     std::cerr << "NUMBER OF ARGUMENT MUST BE ONLY 1\n";
@@ -35,7 +35,7 @@ int main(int arc, char* argv[]) {
   Shader shader("shaders/vertex.glsl", "shaders/fragment.glsl");
   Overlay overlay;
 
-  if (isArch()) // setting for arch
+  if (isArch())
   {
     int fbWidth, fbHeight;
     glfwGetFramebufferSize(window.get(), &fbWidth, &fbHeight);
@@ -52,7 +52,6 @@ int main(int arc, char* argv[]) {
   Mesh mesh1(objProp, 3, GL_STATIC_DRAW);
   GameObject gameObj(mesh1);
 
-  // Fit initial camera distance to the object's bounding sphere.
   float boundRadius = 0.0f;
   for (std::size_t i = 0; i + 2 < objProp.vertices.size(); i += 3) {
     const float len = MathUtils::length(
@@ -62,15 +61,14 @@ int main(int arc, char* argv[]) {
       boundRadius = len;
   }
 
-  constexpr float margin = 1.25f; // breathing room around the object (~80% of screen)
+  constexpr float margin = 1.25f;
   const float halfFov = MathUtils::radians(45.0f / 2.0f);
   const float dist = boundRadius / std::tan(halfFov) * margin;
 
   camera.setRadius(dist);
   camera.move(MathUtils::normalize(camera.getPosition()) * dist);
-  camera.setFarPlane(dist * 5.0f); // keep the fitted object inside the frustum
+  camera.setFarPlane(dist * 5.0f);
 
-  // Light comes from the camera's initial direction (looking at the origin).
   const Vec3 lightDir = MathUtils::normalize(camera.getPosition());
 
   CameraControl& cameraControler = CameraControl::getInstance();
@@ -109,23 +107,12 @@ int main(int arc, char* argv[]) {
 
     gameObj.draw();
 
-    // --- Raw / unlit view: optional triangle outlines (G) --------------
-    // The G key flips shader.isWireframeEnabled(); it starts off. Outlines are
-    // only drawn in the raw view, so turning on the texture/colour (F) hides
-    // them again until the raw model is shown.
     if (shader.isWireframeEnabled() && !shader.isColorEnabled()) {
-      // Tell the fragment shader to emit the flat dark outline colour.
       shader.setBool("wireframe", true);
-      // Draw the mesh again, but rasterize polygons as line segments only,
-      // which gives one outline per triangle without duplicating any geometry.
       glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-      // Pull the lines slightly toward the camera so they do not z-fight with
-      // the filled triangles drawn at the exact same depth.
       glEnable(GL_POLYGON_OFFSET_LINE);
       glPolygonOffset(-1.0f, -1.0f);
-      // Same VAO/EBO as the fill pass, just in line mode.
       gameObj.draw();
-      // Restore normal filled rendering for the next frame and the overlay.
       glDisable(GL_POLYGON_OFFSET_LINE);
       glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
       shader.setBool("wireframe", false);
