@@ -17,9 +17,7 @@ struct Vec3 {
   float x{}, y{}, z{};
 
   Vec3() : x(0.0f), y(0.0f), z(0.0f) {}
-
   Vec3(float n) : x(n), y(n), z(n) {}
-
   Vec3(float x, float y, float z) : x(x), y(y), z(z) {}
 };
 
@@ -40,7 +38,7 @@ Mat4 lookAt(const Vec3& eye, const Vec3& center, const Vec3& up);
 Vec3 normalize(const Vec3&);
 Mat4 perspective(const float& fov, const float& aspect, const float& nearPlane,
                  const float& farPlane);
-};
+}; // namespace MathUtils
 
 Vec3 operator-(const Vec3& a, const Vec3& b);
 Vec3 operator+(const Vec3& a, const Vec3& b);

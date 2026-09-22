@@ -8,6 +8,7 @@ class GameObject {
 public:
   GameObject(Mesh& mesh) : mesh(&mesh) {}
   void draw();
+  void drawWireframe(Shader& shader);
   Mesh* getMesh();
   Transform getTransform();
   void inputHandler(GLFWwindow* window, float& dTime);

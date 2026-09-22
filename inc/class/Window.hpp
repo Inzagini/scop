@@ -5,25 +5,23 @@
 static constexpr int SCR_WIDTH{800};
 static constexpr int SCR_HEIGHT{600};
 
-class Window
-{
-    public:
-        Window();
-        ~Window();
-        GLFWwindow* get() const;
-        void control() const
-        {
-            if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-                glfwSetWindowShouldClose(window, true);
-        }
+class Window {
+public:
+  Window();
+  ~Window();
+  GLFWwindow* get() const;
+  void control() const {
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+      glfwSetWindowShouldClose(window, true);
+  }
 
-    private:
-        static void framebuffer_size_callback(GLFWwindow *window, int width, int height)
-        {
-            window = window;
-            glViewport(0, 0, width, height);
-        }
+private:
+  static void framebuffer_size_callback(GLFWwindow* window, int width,
+                                        int height) {
+    window = window;
+    glViewport(0, 0, width, height);
+  }
 
-    private:
-        GLFWwindow  *window;
+private:
+  GLFWwindow* window;
 };

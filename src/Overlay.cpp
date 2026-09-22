@@ -1,17 +1,5 @@
 #include "class/Overlay.hpp"
 
-#include "glad/glad.h"
-#include <GLFW/glfw3.h>
-#include "stb_easy_font.h"
-
-#include <cstddef>
-#include <cstdlib>
-#include <fstream>
-#include <iostream>
-#include <sstream>
-#include <string>
-#include <vector>
-
 namespace {
 
 struct HudVertex {
@@ -77,9 +65,8 @@ unsigned makeProgram(const std::string& vsrc, const std::string& fsrc) {
 unsigned appendText(std::vector<HudVertex>& verts, float x, float y,
                     char* text) {
   std::vector<char> buf(100000);
-  const int quads =
-      stb_easy_font_print(x, y, text, nullptr, buf.data(),
-                          static_cast<int>(buf.size()));
+  const int quads = stb_easy_font_print(x, y, text, nullptr, buf.data(),
+                                        static_cast<int>(buf.size()));
   const HudVertex* v = reinterpret_cast<const HudVertex*>(buf.data());
   verts.insert(verts.end(), v, v + quads * 4);
   return static_cast<unsigned>(quads);
@@ -89,8 +76,8 @@ unsigned appendText(std::vector<HudVertex>& verts, float x, float y,
 
 // Builds the HUD geometry (button + legend) and uploads it once.
 Overlay::Overlay() {
-  program = makeProgram(loadFile("shaders/hud.vert"),
-                        loadFile("shaders/hud.frag"));
+  program =
+      makeProgram(loadFile("shaders/hud.vert"), loadFile("shaders/hud.frag"));
   uScreenLoc = glGetUniformLocation(program, "uScreen");
 
   const float scale = 3.0f;
@@ -118,19 +105,18 @@ Overlay::Overlay() {
   btnX1 = (margin + buttonSize) * scale;
   btnY1 = (margin + buttonSize) * scale;
 
-  char legend[] =
-      "Controls:\n"
-      "  W A S D      move object\n"
-      "  Q / E        rotate object (Y)\n"
-      "  Arrow keys   rotate object (X/Z)\n"
-      "  Space        center object\n"
-      "  Left-drag    rotate object\n"
-      "  Middle-drag  orbit camera\n"
-      "  Scroll       zoom\n"
-      "  F            toggle color\n"
-      "  G            toggle wireframe\n"
-      "  T            auto-rotate\n"
-      "  Esc          quit";
+  char legend[] = "Controls:\n"
+                  " W A S D     \t move object\n"
+                  " Q / E       \t rotate object (Y)\n"
+                  " Arrow keys  \t rotate object (X/Z)\n"
+                  " Space       \t center object\n"
+                  " Left-drag   \t rotate object\n"
+                  " Middle-drag \t orbit camera\n"
+                  " Scroll      \t zoom\n"
+                  " F           \t toggle color\n"
+                  " G           \t toggle wireframe\n"
+                  " T           \t auto-rotate\n"
+                  " Esc         \t quit";
 
   const float textW = static_cast<float>(stb_easy_font_width(legend));
   const float textH = static_cast<float>(stb_easy_font_height(legend));
@@ -139,8 +125,7 @@ Overlay::Overlay() {
 
   pushQuad(panelX, panelY, panelX + textW + 2 * pad, panelY + textH + 2 * pad,
            20, 20, 30, 200);
-  legendQuadCount =
-      1 + appendText(verts, panelX + pad, panelY + pad, legend);
+  legendQuadCount = 1 + appendText(verts, panelX + pad, panelY + pad, legend);
 
   for (auto& v : verts) {
     v.x *= scale;
@@ -152,8 +137,8 @@ Overlay::Overlay() {
 
   glGenBuffers(1, &vbo);
   glBindBuffer(GL_ARRAY_BUFFER, vbo);
-  glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(HudVertex),
-               verts.data(), GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(HudVertex), verts.data(),
+               GL_STATIC_DRAW);
 
   glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(HudVertex),
                         (void*)offsetof(HudVertex, x));
@@ -220,9 +205,9 @@ void Overlay::draw(int screenW, int screenH) const {
   glDrawElements(GL_TRIANGLES, buttonQuadCount * 6, GL_UNSIGNED_INT, nullptr);
 
   if (visible)
-    glDrawElements(GL_TRIANGLES, legendQuadCount * 6, GL_UNSIGNED_INT,
-                   reinterpret_cast<void*>(buttonQuadCount * 6 *
-                                           sizeof(unsigned)));
+    glDrawElements(
+        GL_TRIANGLES, legendQuadCount * 6, GL_UNSIGNED_INT,
+        reinterpret_cast<void*>(buttonQuadCount * 6 * sizeof(unsigned)));
 
   glBindVertexArray(0);
 

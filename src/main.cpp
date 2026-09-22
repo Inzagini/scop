@@ -1,6 +1,9 @@
 #include "scop.hpp"
 
 // Returns true on Arch-based Linux.
+
+namespace {
+
 bool isArch() {
   std::ifstream file("/etc/os-release");
 
@@ -17,6 +20,7 @@ bool isArch() {
 
   return false;
 }
+} // namespace
 
 // Entry point: set up GL, load the OBJ, run the render loop.
 int main(int arc, char* argv[]) {
@@ -35,8 +39,7 @@ int main(int arc, char* argv[]) {
   Shader shader("shaders/vertex.glsl", "shaders/fragment.glsl");
   Overlay overlay;
 
-  if (isArch())
-  {
+  if (isArch()) {
     int fbWidth, fbHeight;
     glfwGetFramebufferSize(window.get(), &fbWidth, &fbHeight);
     glViewport(0, 0, fbWidth, fbHeight);
@@ -54,9 +57,8 @@ int main(int arc, char* argv[]) {
 
   float boundRadius = 0.0f;
   for (std::size_t i = 0; i + 2 < objProp.vertices.size(); i += 3) {
-    const float len = MathUtils::length(
-        Vec3(objProp.vertices[i], objProp.vertices[i + 1],
-             objProp.vertices[i + 2]));
+    const float len = MathUtils::length(Vec3(
+        objProp.vertices[i], objProp.vertices[i + 1], objProp.vertices[i + 2]));
     if (len > boundRadius)
       boundRadius = len;
   }
@@ -93,13 +95,7 @@ int main(int arc, char* argv[]) {
     shader.setLight(lightDir);
     shader.inputHandler(window.get());
     {
-      shader.setBool("hasTexture", mesh1.hasTexture());
-
-      if (mesh1.hasTexture()) {
-        shader.setInt("diffuseTex", 0);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, mesh1.getTexture());
-      }
+      shader.setTexture(mesh1);
       shader.setModel(gameObj.getTransform().getModel());
       shader.setCamera(camera);
       shader.setMaterialProp(objProp);
@@ -107,16 +103,8 @@ int main(int arc, char* argv[]) {
 
     gameObj.draw();
 
-    if (shader.isWireframeEnabled() && !shader.isColorEnabled()) {
-      shader.setBool("wireframe", true);
-      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-      glEnable(GL_POLYGON_OFFSET_LINE);
-      glPolygonOffset(-1.0f, -1.0f);
-      gameObj.draw();
-      glDisable(GL_POLYGON_OFFSET_LINE);
-      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-      shader.setBool("wireframe", false);
-    }
+    if (shader.isWireframeEnabled() && !shader.isColorEnabled())
+      gameObj.drawWireframe(shader);
 
     overlay.draw(SCR_WIDTH, SCR_HEIGHT);
 

@@ -7,7 +7,6 @@
 
 namespace {
 
-// Loads a 2D texture from disk; returns its GL id (0 on failure).
 unsigned int loadTexture2D(const std::string& path) {
   int w, h, channels;
   stbi_set_flip_vertically_on_load(true);

@@ -1,8 +1,19 @@
 #pragma once
 
+#include "glad/glad.h"
+#include "stb_easy_font.h"
+#include <GLFW/glfw3.h>
+
+#include <cstddef>
+#include <cstdlib>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <vector>
+
 struct GLFWwindow;
 
-// Screen-space HUD: a "?" button toggles the controls legend.
 class Overlay {
 public:
   Overlay();

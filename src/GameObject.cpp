@@ -17,6 +17,18 @@ void GameObject::draw() {
     mesh->draw();
 }
 
+// Redraws the mesh as triangle outlines in the shader's wireframe mode.
+void GameObject::drawWireframe(Shader& shader) {
+  shader.setBool("wireframe", true);
+  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+  glEnable(GL_POLYGON_OFFSET_LINE);
+  glPolygonOffset(-1.0f, -1.0f);
+  draw();
+  glDisable(GL_POLYGON_OFFSET_LINE);
+  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+  shader.setBool("wireframe", false);
+}
+
 Mesh* GameObject::getMesh() { return mesh; }
 
 Transform GameObject::getTransform() { return transform; }

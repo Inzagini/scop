@@ -23,6 +23,7 @@ public:
   void setCamera(Camera& camera);
   void setLight(const Vec3& dir);
   void setModel(Mat4 model);
+  void setTexture(const Mesh&);
   void inputHandler(GLFWwindow* window);
 
   void setInt(const std::string& name, const int n) const;

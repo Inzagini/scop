@@ -131,6 +131,17 @@ void Shader::setLight(const Vec3& dir) {
   setVec3("lightColor", Vec3(1.0f));
 }
 
+void Shader::setTexture(const Mesh& mesh) {
+
+  setBool("hasTexture", mesh.hasTexture());
+
+  if (mesh.hasTexture()) {
+    setInt("diffuseTex", 0);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, mesh.getTexture());
+  }
+}
+
 void Shader::setVec4(const std::string& name, float x, float y, float z,
                      float w) const {
   glUniform4f(glGetUniformLocation(ID, name.c_str()), x, y, z, w);
