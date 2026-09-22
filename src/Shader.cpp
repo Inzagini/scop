@@ -108,9 +108,8 @@ void Shader::setCamera(Camera& camera) {
   setVec3("viewPos", camera.getPosition());
 }
 
-void Shader::setLight() {
-  setVec3("lightDir", MathUtils::normalize(Vec3(1.0f, 1.0f, 1.0f)));
-  setVec3("lightPos", Vec3(1.0f, 1.0f, 1.0f));
+void Shader::setLight(const Vec3& dir) {
+  setVec3("lightDir", MathUtils::normalize(dir));
   setVec3("lightColor", Vec3(1.0f)); // white light
 }
 

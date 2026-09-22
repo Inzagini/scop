@@ -17,7 +17,6 @@ uniform Material material;
 uniform sampler2D diffuseTex;
 uniform bool hasTexture;
 uniform vec3 lightDir;
-uniform vec3 lightPos;
 uniform vec3 lightColor;
 uniform vec3 viewPos;
 uniform bool colorEnabled;
@@ -28,24 +27,24 @@ void main()
 {
    vec3 texColor = hasTexture ? texture(diffuseTex, TexCoord).rgb : vec3(1.0);
 
-   vec3 ambient = material.ambient * lightColor;
+   vec3 ambient = material.ambient * lightColor * 0.1;
 
    vec3 norm = normalize(Normal);
-   vec3 lightDir = normalize(lightPos - FragPos);
+   vec3 L = normalize(lightDir); // directional: model-scale independent
 
-   float diff = max(dot(norm, lightDir), 0.0);
+   float diff = max(dot(norm, L), 0.0);
 
    vec3 diffuse = diff * material.diffuse * texColor * lightColor; 
 
 // Specular
    vec3 viewDir = normalize(viewPos - FragPos);
-   vec3 reflectDir = reflect(-lightDir, norm);
+   vec3 reflectDir = reflect(-L, norm);
    
    float shininess = max(material.shininess, 1.0);
    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
    vec3 specular = lightColor * (spec * material.specular); 
    
-   vec3 finalColor = colorEnabled ? (ambient + diffuse + specular) : texColor * 0.7;
+   vec3 finalColor = colorEnabled ? (ambient + diffuse + specular) : vec3(0.7);
 
    FragColor = vec4(finalColor, material.opacity);
 }

@@ -21,7 +21,7 @@ public:
 
   void setMaterialProp(ObjProp& objprop);
   void setCamera(Camera& camera);
-  void setLight();
+  void setLight(const Vec3& dir);
   void setModel(Mat4 model);
   void inputHandler(GLFWwindow* window);
 

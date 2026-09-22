@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <charconv>
+#include <cmath>
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
@@ -94,13 +95,108 @@ bool parseFaceRef(std::string_view tok, int& vOut, int& vtOut) {
   return true;
 }
 
-// Fan-triangulate any n-gon of 0-based indices into a flat output vector.
+// Ear-clip a simple polygon (convex, concave, or non-planar) into triangles.
+// A fixed fan puts triangles outside concave polygons, and on non-planar quads
+// its one diagonal causes the crease / UV stretch. Ear clipping respects the
+// real outline and prefers the shortest valid diagonal when several ears exist.
 void triangulate(const std::vector<unsigned>& face,
+                 const std::vector<float>& vertices,
                  std::vector<unsigned>& out) {
-  for (std::size_t i = 1; i + 1 < face.size(); ++i) {
+  const std::size_t n = face.size();
+  if (n < 3)
+    return;
+
+  auto P = [&](unsigned idx) {
+    return Vec3(vertices[3 * idx], vertices[3 * idx + 1],
+                vertices[3 * idx + 2]);
+  };
+
+  if (n == 3) {
     out.push_back(face[0]);
-    out.push_back(face[i]);
-    out.push_back(face[i + 1]);
+    out.push_back(face[1]);
+    out.push_back(face[2]);
+    return;
+  }
+
+  // Newell's method: robust normal even for non-planar polygons.
+  Vec3 normal(0.0f);
+  for (std::size_t i = 0; i < n; ++i) {
+    const Vec3 a = P(face[i]);
+    const Vec3 b = P(face[(i + 1) % n]);
+    normal.x += (a.y - b.y) * (a.z + b.z);
+    normal.y += (a.z - b.z) * (a.x + b.x);
+    normal.z += (a.x - b.x) * (a.y + b.y);
+  }
+
+  // Project onto the plane the polygon is most aligned with.
+  const float ax = std::fabs(normal.x), ay = std::fabs(normal.y),
+              az = std::fabs(normal.z);
+  const int axis = (ay >= ax && ay >= az) ? 1 : (az >= ax ? 2 : 0);
+
+  auto ux = [&](const Vec3& p) { return axis == 0 ? p.y : p.x; };
+  auto uy = [&](const Vec3& p) { return axis == 2 ? p.y : p.z; };
+  auto cross2 = [&](const Vec3& a, const Vec3& b, const Vec3& c) {
+    return (ux(b) - ux(a)) * (uy(c) - uy(a)) -
+           (uy(b) - uy(a)) * (ux(c) - ux(a));
+  };
+
+  std::vector<unsigned> poly(face);
+  float area = 0.0f;
+  for (std::size_t i = 0; i < n; ++i) {
+    const Vec3 a = P(poly[i]);
+    const Vec3 b = P(poly[(i + 1) % n]);
+    area += ux(a) * uy(b) - ux(b) * uy(a);
+  }
+  const float sign = area >= 0.0f ? 1.0f : -1.0f;
+
+  std::size_t guard = 0;
+  while (poly.size() > 3 && guard++ <= n * n) {
+    std::size_t best = poly.size();
+    float bestDiag = 0.0f;
+    for (std::size_t i = 0; i < poly.size(); ++i) {
+      const std::size_t prev = (i + poly.size() - 1) % poly.size();
+      const std::size_t next = (i + 1) % poly.size();
+      const Vec3 a = P(poly[prev]), b = P(poly[i]), c = P(poly[next]);
+
+      if (sign * cross2(a, b, c) <= 0.0f)
+        continue; // reflex corner, not an ear
+
+      bool ear = true;
+      for (std::size_t j = 0; j < poly.size() && ear; ++j) {
+        if (j == prev || j == i || j == next)
+          continue;
+        const Vec3 p = P(poly[j]);
+        if (sign * cross2(a, b, p) >= 0.0f &&
+            sign * cross2(b, c, p) >= 0.0f &&
+            sign * cross2(c, a, p) >= 0.0f)
+          ear = false; // another vertex blocks this ear
+      }
+      if (!ear)
+        continue;
+
+      const float diag = MathUtils::length(a - c);
+      if (best == poly.size() || diag < bestDiag) {
+        best = i;
+        bestDiag = diag;
+      }
+    }
+
+    if (best == poly.size())
+      break; // degenerate polygon; fall through to a fan
+
+    const std::size_t prev = (best + poly.size() - 1) % poly.size();
+    const std::size_t next = (best + 1) % poly.size();
+    out.push_back(poly[prev]);
+    out.push_back(poly[best]);
+    out.push_back(poly[next]);
+    poly.erase(poly.begin() + best);
+  }
+
+  // Fan any remainder (normally only the last triangle, or the fallback).
+  for (std::size_t i = 1; i + 1 < poly.size(); ++i) {
+    out.push_back(poly[0]);
+    out.push_back(poly[i]);
+    out.push_back(poly[i + 1]);
   }
 }
 
@@ -332,7 +428,7 @@ bool parseObj(const char* filePath, ObjProp& obj) {
       }
       if (face.size() < 3)
         return false;
-      triangulate(face, obj.indices);
+      triangulate(face, obj.vertices, obj.indices);
 
     } else if (prefix == "mtllib") {
       std::string fileName;

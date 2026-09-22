@@ -70,6 +70,9 @@ int main(int arc, char* argv[]) {
   camera.move(MathUtils::normalize(camera.getPosition()) * dist);
   camera.setFarPlane(dist * 5.0f); // keep the fitted object inside the frustum
 
+  // Light comes from the camera's initial direction (looking at the origin).
+  const Vec3 lightDir = MathUtils::normalize(camera.getPosition());
+
   CameraControl& cameraControler = CameraControl::getInstance();
   cameraControler.init(window.get(), &camera);
   glfwSetWindowUserPointer(window.get(), &cameraControler);
@@ -89,7 +92,7 @@ int main(int arc, char* argv[]) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     shader.use();
-    shader.setLight();
+    shader.setLight(lightDir);
     shader.inputHandler(window.get());
     {
       shader.setBool("hasTexture", mesh1.hasTexture());
