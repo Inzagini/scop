@@ -28,6 +28,13 @@ public:
   void setInt(const std::string& name, const int n) const;
   void setBool(const std::string& name, const bool n) const;
 
+  // Exposes the raw/unlit state so main() can decide whether to draw the
+  // triangle outlines (F toggles the textured/coloured view).
+  bool isColorEnabled() const;
+
+  // True while the G-key triangle-outline overlay is switched on.
+  bool isWireframeEnabled() const;
+
 private:
   void colorToggle();
   void ErrorMessage(unsigned int shader, unsigned int type);
@@ -45,4 +52,5 @@ private:
 private:
   unsigned int ID;
   bool colorEnabled = false;
+  bool wireframeEnabled = false; // G key, off by default
 };

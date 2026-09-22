@@ -31,7 +31,10 @@ void Shader::colorToggle() {
   setBool("colorEnabled", colorEnabled);
 }
 
+// Edge-detected key handling: F flips the textured/coloured view, G flips the
+// triangle-outline overlay. Edge detection keeps one key press = one toggle.
 void Shader::inputHandler(GLFWwindow* window) {
+  // F -> colour/texture toggle (held state compared with the previous frame).
   static bool waspresssed = false;
   bool keyPress = glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS;
 
@@ -39,6 +42,15 @@ void Shader::inputHandler(GLFWwindow* window) {
     colorToggle();
 
   waspresssed = keyPress;
+
+  // G -> wireframe toggle, starts off so nothing is drawn until pressed.
+  static bool gWasPressed = false;
+  bool gPress = glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS;
+
+  if (gPress && !gWasPressed)
+    wireframeEnabled = !wireframeEnabled;
+
+  gWasPressed = gPress;
 }
 
 unsigned int Shader::createAndCompileShader(unsigned int type,
@@ -134,6 +146,12 @@ void Shader::setFloat(const std::string& name, const float n) const {
 void Shader::setInt(const std::string& name, const int n) const {
   glUniform1i(glGetUniformLocation(ID, name.c_str()), n);
 }
+
+// Tells the caller whether the raw/unlit view (triangle outlines) is active.
+bool Shader::isColorEnabled() const { return colorEnabled; }
+
+// Tells the caller whether the G-key triangle outlines are switched on.
+bool Shader::isWireframeEnabled() const { return wireframeEnabled; }
 
 void Shader::setBool(const std::string& name, const bool n) const {
   glUniform1i(glGetUniformLocation(ID, name.c_str()), static_cast<int>(n));

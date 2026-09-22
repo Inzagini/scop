@@ -109,6 +109,28 @@ int main(int arc, char* argv[]) {
 
     gameObj.draw();
 
+    // --- Raw / unlit view: optional triangle outlines (G) --------------
+    // The G key flips shader.isWireframeEnabled(); it starts off. Outlines are
+    // only drawn in the raw view, so turning on the texture/colour (F) hides
+    // them again until the raw model is shown.
+    if (shader.isWireframeEnabled() && !shader.isColorEnabled()) {
+      // Tell the fragment shader to emit the flat dark outline colour.
+      shader.setBool("wireframe", true);
+      // Draw the mesh again, but rasterize polygons as line segments only,
+      // which gives one outline per triangle without duplicating any geometry.
+      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+      // Pull the lines slightly toward the camera so they do not z-fight with
+      // the filled triangles drawn at the exact same depth.
+      glEnable(GL_POLYGON_OFFSET_LINE);
+      glPolygonOffset(-1.0f, -1.0f);
+      // Same VAO/EBO as the fill pass, just in line mode.
+      gameObj.draw();
+      // Restore normal filled rendering for the next frame and the overlay.
+      glDisable(GL_POLYGON_OFFSET_LINE);
+      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+      shader.setBool("wireframe", false);
+    }
+
     overlay.draw(SCR_WIDTH, SCR_HEIGHT);
 
     glfwSwapBuffers(window.get());

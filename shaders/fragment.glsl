@@ -20,11 +20,19 @@ uniform vec3 lightDir;
 uniform vec3 lightColor;
 uniform vec3 viewPos;
 uniform bool colorEnabled;
+uniform bool wireframe; // set while drawing the second (GL_LINE) pass
 
 out vec4 FragColor;
 
 void main()
 {
+   // Wireframe pass: the same mesh is redrawn as lines, so emit a flat dark
+   // colour to make every triangle edge readable over the grey fill.
+   if (wireframe) {
+      FragColor = vec4(0.05, 0.05, 0.05, 1.0);
+      return;
+   }
+
    vec3 texColor = hasTexture ? texture(diffuseTex, TexCoord).rgb : vec3(1.0);
 
    vec3 ambient = material.ambient * lightColor * 0.1;

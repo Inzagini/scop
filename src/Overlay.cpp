@@ -126,6 +126,7 @@ Overlay::Overlay() {
       "  Middle-drag  orbit camera\n"
       "  Scroll       zoom\n"
       "  F            toggle color\n"
+      "  G            toggle wireframe\n"
       "  Esc          quit";
 
   const float textW = static_cast<float>(stb_easy_font_width(legend));

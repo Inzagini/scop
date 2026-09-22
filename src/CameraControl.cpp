@@ -22,7 +22,13 @@ void CameraControl::mouseHandler() {
 void CameraControl::onScroll(double dx, double dy) {
   dx = dx; // not used
   Vec3 offset = camera->getPosition() - target;
-  constexpr float zoomSpeed = 0.3f;
+
+  // Holding Ctrl (either side) makes each scroll step ten times faster.
+  const bool fastZoom =
+      glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS ||
+      glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS;
+  const float zoomSpeed = fastZoom ? 3.0f : 0.3f; // 10x the normal 0.3 step
+
   float distance = MathUtils::length(offset);
 
   float newDistance = distance - float(dy) * zoomSpeed;
