@@ -234,6 +234,59 @@ void recenter(std::vector<float>& verts, bool normaliseSize = false) {
     verts[i + 2] = (verts[i + 2] - cz) * scale;
   }
 }
+
+// Resolve a 1-based (or negative = relative) OBJ index into a 0-based index
+// into the raw array. Returns -1 if out of range.
+int resolveIndex(int idx, std::size_t count) {
+  if (idx > 0)
+    return (static_cast<std::size_t>(idx) <= count) ? idx - 1 : -1;
+  if (idx < 0)
+    return (static_cast<std::size_t>(-idx) <= count)
+               ? static_cast<int>(count) + idx
+               : -1;
+  return -1;
+}
+
+// Fetch (or create) the output vertex for a position/UV index pair. Vertices
+// are deduplicated on (position, uv), so shared corners are reused while UV
+// seams keep a distinct copy. Appends to obj and records the new index.
+unsigned getVertex(int vIdx, int vtIdx, const std::vector<float>& rawPos,
+                   const std::vector<float>& rawUV, ObjProp& obj,
+                   std::unordered_map<std::uint64_t, unsigned>& vertexMap) {
+  const int nv = static_cast<int>(rawPos.size() / 3);
+  const int nvt = static_cast<int>(rawUV.size() / 2);
+
+  const int rv = resolveIndex(vIdx, static_cast<std::size_t>(nv));
+  if (rv < 0)
+    return 0; // sentinel; caller checks later if you want
+  const int rvt =
+      (vtIdx == 0) ? -1 : resolveIndex(vtIdx, static_cast<std::size_t>(nvt));
+
+  const std::uint64_t key =
+      (static_cast<std::uint64_t>(rv) << 32) |
+      (rvt < 0 ? 0xFFFFFFFFu : static_cast<std::uint32_t>(rvt));
+  auto it = vertexMap.find(key);
+  if (it != vertexMap.end())
+    return it->second;
+
+  const unsigned newIdx = static_cast<unsigned>(obj.vertices.size() / 3);
+
+  const std::size_t pi = 3 * static_cast<std::size_t>(rv);
+  obj.vertices.push_back(rawPos[pi]);
+  obj.vertices.push_back(rawPos[pi + 1]);
+  obj.vertices.push_back(rawPos[pi + 2]);
+
+  if (rvt >= 0 && 2 * static_cast<std::size_t>(rvt) + 1 < rawUV.size()) {
+    obj.texCoords.push_back(rawUV[2 * static_cast<std::size_t>(rvt)]);
+    obj.texCoords.push_back(rawUV[2 * static_cast<std::size_t>(rvt) + 1]);
+  } else {
+    obj.texCoords.push_back(0.0f);
+    obj.texCoords.push_back(0.0f);
+  }
+
+  vertexMap[key] = newIdx;
+  return newIdx;
+}
 } // namespace
 
 static bool parseMaterial(const std::filesystem::path& fileName,
@@ -332,55 +385,6 @@ bool parseObj(const char* filePath, ObjProp& obj) {
 
   std::unordered_map<std::uint64_t, unsigned> vertexMap;
 
-  // Resolve a 1-based (or negative = relative) OBJ index into a 0-based
-  // index into the raw array. Returns -1 if out of range.
-  auto resolve = [](int idx, std::size_t count) -> int {
-    if (idx > 0)
-      return (static_cast<std::size_t>(idx) <= count) ? idx - 1 : -1;
-    if (idx < 0)
-      return (static_cast<std::size_t>(-idx) <= count)
-                 ? static_cast<int>(count) + idx
-                 : -1;
-    return -1;
-  };
-
-  auto getVertex = [&](int vIdx, int vtIdx) -> unsigned {
-    const int nv = static_cast<int>(rawPos.size() / 3);
-    const int nvt = static_cast<int>(rawUV.size() / 2);
-
-    const int rv = resolve(vIdx, static_cast<std::size_t>(nv));
-    if (rv < 0)
-      return 0; // sentinel; caller checks later if you want
-    const int rvt =
-        (vtIdx == 0) ? -1 : resolve(vtIdx, static_cast<std::size_t>(nvt));
-
-    const std::uint64_t key =
-        (static_cast<std::uint64_t>(rv) << 32) |
-        (rvt < 0 ? 0xFFFFFFFFu : static_cast<std::uint32_t>(rvt));
-    auto it = vertexMap.find(key);
-    if (it != vertexMap.end())
-      return it->second;
-
-    const unsigned newIdx = static_cast<unsigned>(obj.vertices.size() / 3);
-
-    const std::size_t pi = 3 * static_cast<std::size_t>(rv);
-    obj.vertices.push_back(rawPos[pi]);
-    obj.vertices.push_back(rawPos[pi + 1]);
-    obj.vertices.push_back(rawPos[pi + 2]);
-
-    if (rvt >= 0 &&
-        2 * static_cast<std::size_t>(rvt) + 1 < rawUV.size()) {
-      obj.texCoords.push_back(rawUV[2 * static_cast<std::size_t>(rvt)]);
-      obj.texCoords.push_back(rawUV[2 * static_cast<std::size_t>(rvt) + 1]);
-    } else {
-      obj.texCoords.push_back(0.0f);
-      obj.texCoords.push_back(0.0f);
-    }
-
-    vertexMap[key] = newIdx;
-    return newIdx;
-  };
-
   std::string raw;
   int lineNum{};
 
@@ -424,7 +428,7 @@ bool parseObj(const char* filePath, ObjProp& obj) {
         int v, vt;
         if (!parseFaceRef(tok, v, vt))
           return false;
-        face.push_back(getVertex(v, vt));
+        face.push_back(getVertex(v, vt, rawPos, rawUV, obj, vertexMap));
       }
       if (face.size() < 3)
         return false;
