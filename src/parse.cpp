@@ -2,14 +2,6 @@
 
 namespace {
 
-// Appends an offset (x, y, z) triple to a flat float vector.
-template <typename T, typename U>
-void pushToVector(T x, T y, T z, T offset, std::vector<U>& vec) {
-  vec.push_back(x - offset);
-  vec.push_back(y - offset);
-  vec.push_back(z - offset);
-}
-
 // Strip UTF-8 BOM, leading whitespace, and trailing CR/whitespace.
 std::string_view normalise(std::string_view s, bool firstLine) {
   if (firstLine && s.size() >= 3 && static_cast<unsigned char>(s[0]) == 0xEF &&
